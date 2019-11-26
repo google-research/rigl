@@ -1,4 +1,6 @@
-## Rigging the Lottery
+## Rigging the Lottery: Making All Tickets Winners
+
+**Paper**: [https://arxiv.org/abs/1911.11134](https://arxiv.org/abs/1911.11134)
 
 In this repository we implement following dynamic sparsity strategies:
 

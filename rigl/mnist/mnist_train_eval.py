@@ -260,6 +260,11 @@ def main(unused_args):
     opt = tf.train.GradientDescentOptimizer(learning_rate)
   else:
     raise RuntimeError(FLAGS.optimizer + ' is unknown optimizer type')
+  custom_sparsities = {
+      'layer2': FLAGS.end_sparsity * FLAGS.sparsity_scale,
+      'layer3': FLAGS.end_sparsity * 0
+  }
+
   if FLAGS.training_method == 'set':
     # We override the train op to also update the mask.
     opt = sparse_optimizers.SparseSETOptimizer(
@@ -293,8 +298,11 @@ def main(unused_args):
         initial_acc_scale=FLAGS.rigl_acc_scale, use_tpu=False)
   elif FLAGS.training_method == 'snip':
     opt = sparse_optimizers.SparseSnipOptimizer(
-        opt, mask_init_method=FLAGS.mask_init_method,
-        default_sparsity=FLAGS.end_sparsity, use_tpu=False)
+        opt,
+        mask_init_method=FLAGS.mask_init_method,
+        default_sparsity=FLAGS.end_sparsity,
+        custom_sparsity_map=custom_sparsities,
+        use_tpu=False)
   elif FLAGS.training_method in ('scratch', 'baseline', 'prune'):
     pass
   else:
@@ -302,10 +310,6 @@ def main(unused_args):
 
   train_op = opt.minimize(cross_entropy_train, global_step=global_step)
 
-  custom_sparsities = {
-      'layer2': FLAGS.end_sparsity * FLAGS.sparsity_scale,
-      'layer3': FLAGS.end_sparsity * 0
-  }
 
   if FLAGS.training_method == 'prune':
     hparams_string = ('begin_pruning_step={0},sparsity_function_begin_step={0},'

@@ -1,58 +1,61 @@
-## Rigging the Lottery: Making All Tickets Winners
+# Rigging the Lottery: Making All Tickets Winners
+![80% Sparse Resnet-50](https://github.com/google-research/rigl/blob/master/imgs/flops8.jpg)
 
 **Paper**: [https://arxiv.org/abs/1911.11134](https://arxiv.org/abs/1911.11134)
 
+## Sparse Training Algorithms
 In this repository we implement following dynamic sparsity strategies:
 
 1.  [SET](https://www.nature.com/articles/s41467-018-04316-3): Implements Sparse
     Evalutionary Training (SET) which corresponds to replacing low magnitude
-    weights with new random new connections.
+    connections randomly with new ones.
 
 2.  [SNFS](https://arxiv.org/abs/1907.04840): Implements momentum based training
-    with sparsity re-distribution:
+    *without* sparsity re-distribution:
 
 3.  [RigL](https://arxiv.org/abs/1911.11134): Our method, RigL, removes a
     fraction of connections based on weight magnitudes and activates new ones
-    using instantaneous gradient information. After updating the connectivity,
-    training continues with the updated network until the next update.
+    using instantaneous gradient information.
 
 And the following one-shot pruning algorithm:
 
-1. [SNIP](https://arxiv.org/abs/1810.02340): Single-shot Network Pruning based on Connection Sensitivity,
-  prunes the least salient connections before training.
+1. [SNIP](https://arxiv.org/abs/1810.02340): Single-shot Network Pruning based 
+  on connection sensitivity prunes the least salient connections before training.
 
 We have code for following settings:
-- [Imagenet2012](https://github.com/google-research/rigl/tree/master/rigl/imagenet_resnet)
-  TPU compatible code with Resnet-50, MobileNet-v1/v2.
+- [Imagenet2012](https://github.com/google-research/rigl/tree/master/rigl/imagenet_resnet):
+  TPU compatible code with Resnet-50 and MobileNet-v1/v2.
 - [CIFAR-10](https://github.com/google-research/rigl/tree/master/rigl/cifar_resnet)
   with WideResNets.
-- [MNIST](https://github.com/google-research/rigl/tree/master/rigl/mnist) with 
+- [MNIST](https://github.com/google-research/rigl/tree/master/rigl/mnist) with
   2 layer fully connected network.
 
 ## Setup
 First clone this repo.
-```
+```bash
 git clone https://github.com/google-research/rigl.git
 cd rigl
 ```
-We use the counter used in [Neurips 2019 MicroNet Challenge](https://micronet-challenge.github.io/).
-So we need the clone the google_research repo for that and change the name.
-```
+
+We use [Neurips 2019 MicroNet Challenge](https://micronet-challenge.github.io/)
+code for counting operations and size of our networks. Let's clone the
+google_research repo and add current folder to the python path.
+```bash
 git clone https://github.com/google-research/google-research.git
 mv google-research/ google_research/
+export PYTHONPATH=$PYTHONPATH:$PWD
 ```
-Now we can run the test. Following script creates a virtual environments and
-installs the necessary libraries. Then it runs few tests.
-```
+
+Now we can run some tests. Following script creates a virtual environment and
+installs the necessary libraries. Finally, it runs few tests.
+```bash
 bash run.sh
 ```
-We need to activate the virtual environment before running the experiment.
-We also add the current folder manually to the python path. With that, we are
-ready to run some trivial mnist experiments. 
 
-```
+We need to activate the virtual environment before running an experiment. With
+that, we are ready to run some trivial MNIST experiments.
+```bash
 source env/bin/activate
-export PYTHONPATH=$PYTHONPATH:$PWD
 
 python rigl/mnist/mnist_train_eval.py
 ```

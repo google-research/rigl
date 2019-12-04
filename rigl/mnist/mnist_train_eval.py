@@ -30,6 +30,7 @@ from rigl import sparse_optimizers
 from rigl import sparse_utils
 import tensorflow as tf
 
+from tensorflow.contrib import layers as contrib_layers
 from tensorflow.contrib.model_pruning.python import pruning
 from tensorflow.contrib.model_pruning.python.layers import layers
 from tensorflow.examples.tutorials.mnist import input_data

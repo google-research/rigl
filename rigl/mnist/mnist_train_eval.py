@@ -82,6 +82,8 @@ flags.DEFINE_integer('maskupdate_begin_step', 0, 'Step to begin mask updates.')
 flags.DEFINE_integer('maskupdate_end_step', 50000, 'Step to end mask updates.')
 flags.DEFINE_integer('maskupdate_frequency', 100,
                      'Step interval between mask updates.')
+flags.DEFINE_integer('mask_record_frequency', 0,
+                     'Step interval between mask updates.')
 flags.DEFINE_string(
     'mask_init_method',
     default='random',
@@ -402,10 +404,16 @@ def main(unused_args):
       sess.run(init_op)
       sess.run(mask_init_op)
       tic = time.time()
+      mask_records = {}
       with tf.io.gfile.GFile(filename, 'w') as outputfile:
         print(log_str)
         print(log_str, file=outputfile)
         for i in range(FLAGS.num_epochs * num_batches):
+          if (FLAGS.mask_record_frequency > 0 and
+              i % FLAGS.mask_record_frequency == 0):
+            mask_vals = sess.run(pruning.get_masks())
+            # Cast into bool to save space.
+            mask_records[i] = [a.astype(np.bool) for a in mask_vals]
           sess.run([train_op])
           weight_sparsity, global_sparsity_val = sess.run(
               [weight_sparsity_levels, global_sparsity])
@@ -432,6 +440,8 @@ def main(unused_args):
             tic = time.time()
       if FLAGS.save_model:
         saver.save(sess, os.path.join(FLAGS.save_path, 'model.ckpt'))
+      if mask_records:
+        np.save(os.path.join(FLAGS.save_path, 'mask_records'), mask_records)
 
 
 if __name__ == '__main__':

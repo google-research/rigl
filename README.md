@@ -1,5 +1,5 @@
 # Rigging the Lottery: Making All Tickets Winners
-<img src="https://github.com/google-research/rigl/blob/master/imgs/flops8.jpg" alt="80% Sparse Resnet-50" width="45%" align="middle">
+![80% Sparse Resnet-50](https://github.com/google-research/rigl/blob/master/imgs/flops8.jpg)
 
 **Paper**: [https://arxiv.org/abs/1911.11134](https://arxiv.org/abs/1911.11134)
 

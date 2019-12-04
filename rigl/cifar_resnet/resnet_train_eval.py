@@ -317,7 +317,7 @@ def build_model(mode,
         model.
   """
   regularizer_term = tf.constant(FLAGS.l2, tf.float32)
-  kernel_regularizer = tf.contrib.layers.l2_regularizer(scale=regularizer_term)
+  kernel_regularizer = contrib_layers.l2_regularizer(scale=regularizer_term)
 
   # depth should be 6n+4 where n is the desired number of resnet blocks
   # if n=2,depth=10  n=3,depth=22, n=5,depth=34 n=7,depth=46
@@ -496,7 +496,7 @@ def main(argv):
   if FLAGS.mode == 'eval':
     eval_steps = 10000 // FLAGS.batch_size
     # Run evaluation when there's a new checkpoint
-    for ckpt in tf.contrib.training.checkpoints_iterator(train_dir):
+    for ckpt in contrib_training.checkpoints_iterator(train_dir):
       print('Starting to evaluate.')
       try:
         classifier.evaluate(

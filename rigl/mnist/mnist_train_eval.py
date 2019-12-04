@@ -105,7 +105,7 @@ FLAGS = flags.FLAGS
 # decay = 1e-4
 def mnist_network_fc(input_batch, reuse=False, model_pruning=False):
   """Define a basic FC network."""
-  regularizer = tf.contrib.layers.l2_regularizer(scale=FLAGS.l2_scale)
+  regularizer = contrib_layers.l2_regularizer(scale=FLAGS.l2_scale)
   if model_pruning:
     y = layers.masked_fully_connected(
         inputs=input_batch[0],

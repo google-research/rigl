@@ -25,6 +25,7 @@ from __future__ import print_function
 from rigl.imagenet_resnet.pruning_layers import sparse_conv2d
 from rigl.imagenet_resnet.pruning_layers import sparse_fully_connected
 import tensorflow as tf
+from tensorflow.contrib import layers as contrib_layers
 _BN_EPS = 1e-5
 _BN_MOMENTUM = 0.9
 
@@ -115,7 +116,7 @@ class WideResNetModel(object):
         net = tf.layers.average_pooling2d(
             net, pool_size=8, strides=1, data_format=self._data_format)
 
-      net = tf.contrib.layers.flatten(net)
+      net = contrib_layers.flatten(net)
       last_layer_technique = self._pruning_method
       if not self._prune_last_layer:
         last_layer_technique = 'baseline'

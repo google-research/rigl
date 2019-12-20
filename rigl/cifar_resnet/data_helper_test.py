@@ -26,7 +26,7 @@ from absl import logging
 import absl.testing.parameterized as parameterized
 from rigl.cifar_resnet import resnet_train_eval
 from rigl.cifar_resnet.data_helper import input_fn
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.contrib.model_pruning.python import pruning
 
 FLAGS = flags.FLAGS

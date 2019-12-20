@@ -28,7 +28,7 @@ from absl import flags
 import numpy as np
 from rigl import sparse_optimizers
 from rigl import sparse_utils
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow.contrib import layers as contrib_layers
 from tensorflow.contrib.model_pruning.python import pruning

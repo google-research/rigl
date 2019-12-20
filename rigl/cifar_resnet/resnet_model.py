@@ -24,7 +24,7 @@ from __future__ import print_function
 
 from rigl.imagenet_resnet.pruning_layers import sparse_conv2d
 from rigl.imagenet_resnet.pruning_layers import sparse_fully_connected
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.contrib import layers as contrib_layers
 _BN_EPS = 1e-5
 _BN_MOMENTUM = 0.9

@@ -43,7 +43,7 @@ from absl import flags
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 flags.DEFINE_string('records_path', '/tmp/mnist/mask_records.npy',
                     'Path to load masks records.')

@@ -24,7 +24,7 @@ from __future__ import print_function
 import absl.testing.parameterized as parameterized
 import numpy as np
 from rigl import sparse_utils
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 class GetMaskRandomTest(tf.test.TestCase, parameterized.TestCase):

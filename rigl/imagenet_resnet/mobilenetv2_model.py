@@ -24,7 +24,7 @@ from absl import flags
 from rigl.imagenet_resnet import resnet_model
 from rigl.imagenet_resnet.pruning_layers import sparse_conv2d
 from rigl.imagenet_resnet.pruning_layers import sparse_fully_connected
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.contrib import layers as contrib_layers
 
 FLAGS = flags.FLAGS

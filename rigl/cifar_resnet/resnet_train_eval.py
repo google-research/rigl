@@ -33,7 +33,7 @@ from rigl import sparse_utils
 from rigl.cifar_resnet.data_helper import input_fn
 from rigl.cifar_resnet.resnet_model import WideResNetModel
 from rigl.imagenet_resnet import utils
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.contrib import layers as contrib_layers
 from tensorflow.contrib import training as contrib_training
 from tensorflow.contrib.model_pruning.python import pruning

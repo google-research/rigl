@@ -33,7 +33,7 @@ from rigl.imagenet_resnet import mobilenetv1_model
 from rigl.imagenet_resnet import mobilenetv2_model
 from rigl.imagenet_resnet import resnet_model
 from rigl.imagenet_resnet import utils
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from officialresnet import imagenet_input
 from tensorflow.contrib import estimator as contrib_estimator
 from tensorflow.contrib import tpu as contrib_tpu

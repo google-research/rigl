@@ -26,7 +26,7 @@ import absl.testing.parameterized as parameterized
 import numpy as np
 from rigl import sparse_optimizers
 from rigl import sparse_utils
-import tensorflow as tf  # tf
+import tensorflow.compat.v1 as tf  # tf
 from tensorflow.contrib.model_pruning.python import pruning
 from tensorflow.contrib.model_pruning.python.layers import layers
 

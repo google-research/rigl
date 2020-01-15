@@ -86,3 +86,38 @@ def mask_summaries(masks, with_img=False):
     if with_img:
       metrics[IMG_SUMMARY_PREFIX + 'mask/' + mask.op.name] = mask
   return metrics
+
+
+def initialize_parameters_from_ckpt(ckpt_path, model_dir, param_suffixes):
+  """Load parameters from an existing checkpoint.
+
+  Args:
+    ckpt_path: str, loads the mask variables from this checkpoint.
+    model_dir: str, if checkpoint exists in this folder no-op.
+    param_suffixes: list or str, suffix of parameters to be load from
+      checkpoint.
+  """
+  already_has_ckpt = model_dir and tf.train.latest_checkpoint(
+      model_dir) is not None
+  if already_has_ckpt:
+    tf.logging.info(
+        'Training already started on this model, not loading masks from'
+        'previously trained model')
+    return
+
+  reader = tf.train.NewCheckpointReader(ckpt_path)
+  param_names = reader.get_variable_to_shape_map().keys()
+  param_names = [x for x in param_names if x.endswith(param_suffixes)]
+
+  variable_map = {}
+  for var in tf.global_variables():
+    var_name = var.name.split(':')[0]
+    if var_name in param_names:
+      tf.logging.info('Loading parameter variable from checkpoint: %s',
+                      var_name)
+      variable_map[var_name] = var
+    elif var_name.endswith(param_suffixes):
+      tf.logging.info(
+          'Cannot find parameter variable in checkpoint, skipping: %s',
+          var_name)
+  tf.train.init_from_checkpoint(ckpt_path, variable_map)

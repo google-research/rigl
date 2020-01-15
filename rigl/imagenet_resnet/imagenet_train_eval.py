@@ -255,6 +255,7 @@ flags.DEFINE_integer('block_height', 1, 'height of block')
 FLAGS = flags.FLAGS
 LR_SCHEDULE = []
 PARAM_SUFFIXES = ('gamma', 'beta', 'weights', 'biases')
+MASK_SUFFIX = 'mask'
 
 
 # Learning rate schedule (multiplier, epoch to start) tuples
@@ -565,76 +566,23 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
 
     eval_metrics = (metric_fn, tensors)
 
-  # define a custom scaffold function to enable initializing the mask from an
-  # already trained checkpoint.
-  def initialize_mask_from_ckpt(ckpt_path):
-    """Load mask from an existing checkpoint."""
-    model_dir = FLAGS.output_dir
-    already_has_ckpt = model_dir and tf.train.latest_checkpoint(
-        model_dir) is not None
-    if already_has_ckpt:
-      tf.logging.info(
-          'Training already started on this model, not loading masks from'
-          'previously trained model')
-      return
-
-    reader = tf.train.NewCheckpointReader(ckpt_path)
-    mask_names = reader.get_variable_to_shape_map().keys()
-    mask_names = [x for x in mask_names if x.endswith('mask')]
-
-    variable_map = {}
-    for var in tf.global_variables():
-      var_name = var.name.split(':')[0]
-      if var_name in mask_names:
-        tf.logging.info('Loading mask variable from checkpoint: %s', var_name)
-        variable_map[var_name] = var
-      elif var_name.endswith('mask'):
-        tf.logging.info('Cannot find mask variable in checkpoint, skipping: %s',
-                        var_name)
-    tf.train.init_from_checkpoint(ckpt_path, variable_map)
-
-  def initialize_parameters_from_ckpt(ckpt_path):
-    """Load parameters from an existing checkpoint."""
-    model_dir = FLAGS.output_dir
-    already_has_ckpt = model_dir and tf.train.latest_checkpoint(
-        model_dir) is not None
-    if already_has_ckpt:
-      tf.logging.info(
-          'Training already started on this model, not loading masks from'
-          'previously trained model')
-      return
-
-    reader = tf.train.NewCheckpointReader(ckpt_path)
-    param_names = reader.get_variable_to_shape_map().keys()
-    param_names = [x for x in param_names if x.endswith(PARAM_SUFFIXES)]
-
-    variable_map = {}
-    for var in tf.global_variables():
-      var_name = var.name.split(':')[0]
-      if var_name in param_names:
-        tf.logging.info('Loading parameter variable from checkpoint: %s',
-                        var_name)
-        variable_map[var_name] = var
-      elif var_name.endswith(PARAM_SUFFIXES):
-        tf.logging.info(
-            'Cannot find parameter variable in checkpoint, skipping: %s',
-            var_name)
-    tf.train.init_from_checkpoint(ckpt_path, variable_map)
-
   if (FLAGS.load_mask_dir and
       FLAGS.training_method not in ('snip', 'baseline')):
     def scaffold_fn():
       """For initialization, passed to the estimator."""
-      initialize_mask_from_ckpt(FLAGS.load_mask_dir)
+      utils.initialize_parameters_from_ckpt(FLAGS.load_mask_dir,
+                                            FLAGS.output_dir, MASK_SUFFIX)
       if FLAGS.initial_value_checkpoint:
-        initialize_parameters_from_ckpt(FLAGS.initial_value_checkpoint)
+        utils.initialize_parameters_from_ckpt(FLAGS.initial_value_checkpoint,
+                                              FLAGS.output_dir, PARAM_SUFFIXES)
       return tf.train.Scaffold()
   elif (FLAGS.mask_init_method and
         FLAGS.training_method not in ('snip', 'baseline')):
     def scaffold_fn():
       """For initialization, passed to the estimator."""
       if FLAGS.initial_value_checkpoint:
-        initialize_parameters_from_ckpt(FLAGS.initial_value_checkpoint)
+        utils.initialize_parameters_from_ckpt(FLAGS.initial_value_checkpoint,
+                                              FLAGS.output_dir, PARAM_SUFFIXES)
       all_masks = pruning.get_masks()
       assigner = sparse_utils.get_mask_init_fn(
           all_masks, FLAGS.mask_init_method, FLAGS.end_sparsity,

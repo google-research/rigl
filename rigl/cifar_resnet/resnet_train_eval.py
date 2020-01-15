@@ -42,10 +42,18 @@ flags.DEFINE_string('master', 'local',
                     'BNS name of the TensorFlow runtime to use.')
 flags.DEFINE_integer('ps_task', 0,
                      'Task id of the replica running the training.')
+flags.DEFINE_integer('keep_checkpoint_max', 5,
+                     'Number of checkpoints to save, set 0 for all.')
 flags.DEFINE_string('pruning_hparams', '',
                     'Comma separated list of pruning-related hyperparameters')
 flags.DEFINE_string('train_dir', '/tmp/cifar10/',
                     'Directory where to write event logs and checkpoint.')
+flags.DEFINE_string(
+    'load_mask_dir', '',
+    'Directory of a trained model from which to load only the mask')
+flags.DEFINE_string(
+    'initial_value_checkpoint', '',
+    'Directory of a model from which to load only the parameters')
 flags.DEFINE_integer(
     'seed', default=0, help=('Sets the random seed.'))
 flags.DEFINE_float('momentum', 0.9, 'The momentum value.')
@@ -60,7 +68,7 @@ flags.DEFINE_string(
 flags.DEFINE_integer('num_classes', 10, 'Number of classes.')
 flags.DEFINE_integer('dataset_size', 50000, 'Size of training dataset.')
 flags.DEFINE_integer('batch_size', 128, 'Batch size.')
-flags.DEFINE_integer('checkpoint_steps', 1000, 'Specifies step interval for'
+flags.DEFINE_integer('checkpoint_steps', 5000, 'Specifies step interval for'
                      'saving model checkpoints.')
 flags.DEFINE_integer(
     'summaries_steps', 300, 'Specifies interval in steps for'
@@ -121,7 +129,8 @@ flags.DEFINE_float('training_steps_multiplier', 1.0,
                    'multiplier, if it is not 1.')
 
 FLAGS = flags.FLAGS
-
+PARAM_SUFFIXES = ('gamma', 'beta', 'weights', 'biases')
+MASK_SUFFIX = 'mask'
 CLASSES = [
     'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
     'ship', 'truck'
@@ -420,10 +429,25 @@ def wide_resnet_w_pruning(features, labels, mode, params):
   else:
     raise ValueError('mode not recognized as training or eval.')
 
-  if FLAGS.training_method in ('prune', 'snip', 'baseline'):
-    scaffold = None
-    tf.logging.info('No mask is set, starting dense.')
-  else:
+  # If given load parameter values.
+  if FLAGS.initial_value_checkpoint:
+    tf.logging.info('Loading inital values from: %s',
+                    FLAGS.initial_value_checkpoint)
+    utils.initialize_parameters_from_ckpt(FLAGS.initial_value_checkpoint,
+                                          FLAGS.train_dir, PARAM_SUFFIXES)
+
+  # Load or randomly initialize masks.
+  if (FLAGS.load_mask_dir and
+      FLAGS.training_method not in ('snip', 'baseline', 'prune')):
+    # Init masks.
+    tf.logging.info('Loading masks from %s', FLAGS.load_mask_dir)
+    utils.initialize_parameters_from_ckpt(FLAGS.load_mask_dir, FLAGS.train_dir,
+                                          MASK_SUFFIX)
+    scaffold = tf.train.Scaffold()
+  elif (FLAGS.mask_init_method and
+        FLAGS.training_method not in ('snip', 'baseline', 'scratch', 'prune')):
+    tf.logging.info('Initializing masks using method: %s',
+                    FLAGS.mask_init_method)
     all_masks = pruning.get_masks()
     assigner = sparse_utils.get_mask_init_fn(
         all_masks, FLAGS.mask_init_method, FLAGS.end_sparsity, {})
@@ -432,6 +456,10 @@ def wide_resnet_w_pruning(features, labels, mode, params):
       del scaffold  # Unused.
       session.run(assigner)
     scaffold = tf.train.Scaffold(init_fn=init_fn)
+  else:
+    assert FLAGS.training_method in ('snip', 'baseline', 'prune')
+    scaffold = None
+    tf.logging.info('No mask is set, starting dense.')
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
@@ -466,7 +494,7 @@ def main(argv):
                                str(FLAGS.maskupdate_begin_step),
                                str(FLAGS.maskupdate_end_step),
                                str(FLAGS.maskupdate_frequency))
-  elif FLAGS.training_method in ('baseline', 'snip'):
+  elif FLAGS.training_method in ('baseline', 'snip', 'scratch'):
     folder_stub = os.path.join(FLAGS.training_method, str(0.0), str(0.0),
                                str(0.0), str(0.0))
   else:
@@ -485,6 +513,7 @@ def main(argv):
 
   run_config = tf.estimator.RunConfig(
       model_dir=train_dir,
+      keep_checkpoint_max=FLAGS.keep_checkpoint_max,
       save_summary_steps=FLAGS.summaries_steps,
       save_checkpoints_steps=FLAGS.checkpoint_steps,
       log_step_count_steps=100)

@@ -47,12 +47,17 @@ import tensorflow.compat.v1 as tf
 
 flags.DEFINE_string('records_path', '/tmp/mnist/mask_records.npy',
                     'Path to load masks records.')
-flags.DEFINE_string('save_path', '', 'Path to load masks records.')
-flags.DEFINE_list('new_shape', '28,28', 'Path to load masks records.')
+flags.DEFINE_string('save_path', '', 'Path to save the animation.')
+flags.DEFINE_list('new_shape', '28,28', 'Path for reshaping the units.')
 flags.DEFINE_integer('interval', 100, 'Miliseconds between plot updates.')
-flags.DEFINE_integer('layer_id', 0, 'Miliseconds between plot updates.')
-flags.DEFINE_integer('skip_mask', 10, 'Miliseconds between plot updates.')
-flags.DEFINE_integer('slow_until', 50, 'Miliseconds between plot updates.')
+flags.DEFINE_integer('layer_id', 0, 'of which we plot statistics during '
+                     'training.')
+flags.DEFINE_integer('skip_mask', 10, 'number of checkpoints to skip for '
+                     'each frame.')
+flags.DEFINE_integer(
+    'slow_until', 50, 'Number of masks to show with slower '
+    'speed. After this number of frames, we start skipping '
+    'frames to make the video shorter.')
 FLAGS = flags.FLAGS
 
 

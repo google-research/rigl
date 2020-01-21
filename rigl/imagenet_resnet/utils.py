@@ -20,7 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow.compat.v1 as tf
-from tensorflow.contrib import summary
+from tensorflow.compat.v2 import summary
 
 IMG_SUMMARY_PREFIX = '_img_'
 
@@ -68,14 +68,16 @@ def host_call_fn(model_dir, **kwargs):
   """
   gs = kwargs.pop('global_step')[0]
   with summary.create_file_writer(model_dir).as_default():
-    with summary.always_record_summaries():
+    # Always record summaries.
+    with summary.record_if(True):
       for name, tensor in kwargs.iteritems():
         if name.startswith(IMG_SUMMARY_PREFIX):
           summary.image(name.replace(IMG_SUMMARY_PREFIX, ''), tensor,
                         max_images=1)
         else:
           summary.scalar(name, tensor[0], step=gs)
-      return summary.all_summary_ops()
+      # Following function is under tf:1x, so we use it.
+      return tf.summary.all_v2_summary_ops()
 
 
 def mask_summaries(masks, with_img=False):

@@ -76,6 +76,8 @@ flags.DEFINE_integer(
     'seed', default=0, help=('Sets the random seed.'))
 flags.DEFINE_string(
     'data_directory', None, 'The location of the sstable used for training.')
+flags.DEFINE_string('eval_once_ckpt_prefix', '',
+                    'File name of the eval chekpoint used for evaluation.')
 flags.DEFINE_string(
     'data_format',
     default='channels_last',
@@ -480,6 +482,7 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
     prune_last_layer = FLAGS.last_layer_sparsity != 0.
     network = network_func(
         num_classes=FLAGS.num_label_classes,
+        # TODO remove the pruning_method option.
         pruning_method='threshold',
         width=width,
         prune_last_layer=prune_last_layer,

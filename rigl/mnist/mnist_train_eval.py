@@ -72,8 +72,11 @@ flags.DEFINE_string('grow_init', 'zeros',
 flags.DEFINE_float('s_momentum', 0.9,
                    'Momentum values for exponential moving average of '
                    'gradients. Used when training_method="momentum".')
-flags.DEFINE_string('input_mask_path', '',
-                    'Momentum values for exponential moving average of ')
+flags.DEFINE_string(
+    'input_mask_path', '',
+    'If given, uses the first mask of the checkpoint to mask '
+    'the input. If all the outgoing connections are masked '
+    'in the mask, we mask that dimension of the input.')
 flags.DEFINE_float('sparsity_scale', 0.9, 'Relative sparsity of second layer.')
 flags.DEFINE_float('rigl_acc_scale', 0.,
                    'Used to scale initial accumulated gradients for new '
@@ -83,7 +86,7 @@ flags.DEFINE_integer('maskupdate_end_step', 50000, 'Step to end mask updates.')
 flags.DEFINE_integer('maskupdate_frequency', 100,
                      'Step interval between mask updates.')
 flags.DEFINE_integer('mask_record_frequency', 0,
-                     'Step interval between mask updates.')
+                     'Step interval between mask logging.')
 flags.DEFINE_string(
     'mask_init_method',
     default='random',

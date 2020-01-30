@@ -393,14 +393,10 @@ def main(unused_args):
     with tf.Session() as sess:
       summary_writer = tf.summary.FileWriter(FLAGS.save_path,
                                              graph=tf.get_default_graph())
-      if FLAGS.network_type == 'fc':
-        log_str = ','.join(['Epoch', 'Iteration', 'Test loss', 'Test accuracy',
-                            'G_Sparsity', 'Sparsity Layer 0',
-                            'Sparsity Layer 1'])
-      else:
-        log_str = ','.join(['Epoch', 'Iteration', 'Test loss', 'Test accuracy',
-                            'G_Sparsity', 'Sparsity Layer 0',
-                            'Sparsity Layer 1'])
+      log_str = ','.join([
+          'Epoch', 'Iteration', 'Test loss', 'Test accuracy', 'G_Sparsity',
+          'Sparsity Layer 0', 'Sparsity Layer 1'
+      ])
       sess.run(init_op)
       sess.run(mask_init_op)
       tic = time.time()

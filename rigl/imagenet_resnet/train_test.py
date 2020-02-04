@@ -26,7 +26,7 @@ import absl.testing.parameterized as parameterized
 from rigl.imagenet_resnet.imagenet_train_eval import resnet_model_fn_w_pruning
 from rigl.imagenet_resnet.imagenet_train_eval import set_lr_schedule
 import tensorflow.compat.v1 as tf  # tf
-from officialresnet import imagenet_input
+from official.resnet import imagenet_input
 from tensorflow.contrib.tpu.python.tpu import tpu_config
 from tensorflow.contrib.tpu.python.tpu import tpu_estimator
 

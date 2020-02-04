@@ -34,7 +34,7 @@ from rigl.imagenet_resnet import mobilenetv2_model
 from rigl.imagenet_resnet import resnet_model
 from rigl.imagenet_resnet import utils
 import tensorflow.compat.v1 as tf
-from officialresnet import imagenet_input
+from official.resnet import imagenet_input
 from tensorflow.contrib import estimator as contrib_estimator
 from tensorflow.contrib import tpu as contrib_tpu
 from tensorflow.contrib.model_pruning.python import pruning

@@ -85,9 +85,11 @@ def get_mask_random(mask, sparsity, dtype, random_state=None):
   return new_mask
 
 
-def _get_sparsities_erdos_renyi(all_masks, default_sparsity,
-                                custom_sparsity_map, include_kernel,
-                                extract_name_fn=mask_extract_name_fn):
+def get_sparsities_erdos_renyi(all_masks,
+                               default_sparsity,
+                               custom_sparsity_map,
+                               include_kernel,
+                               extract_name_fn=mask_extract_name_fn):
   """Given the method, returns the sparsity of individual layers as a dict.
 
   It ensures that the non-custom layers have a total parameter count as the one
@@ -200,9 +202,10 @@ def _get_sparsities_erdos_renyi(all_masks, default_sparsity,
   return sparsities
 
 
-def _get_sparsities_uniform(all_masks, default_sparsity,
-                            custom_sparsity_map,
-                            extract_name_fn=mask_extract_name_fn):
+def get_sparsities_uniform(all_masks,
+                           default_sparsity,
+                           custom_sparsity_map,
+                           extract_name_fn=mask_extract_name_fn):
   """Given the method, returns the sparsity of individual layers as a dict.
 
   Args:
@@ -262,14 +265,18 @@ def get_sparsities(all_masks, method, default_sparsity, custom_sparsity_map,
 
   if method in ('erdos_renyi', 'erdos_renyi_kernel'):
     include_kernel = method == 'erdos_renyi_kernel'
-    sparsities = _get_sparsities_erdos_renyi(all_masks, default_sparsity,
-                                             custom_sparsity_map,
-                                             include_kernel=include_kernel,
-                                             extract_name_fn=extract_name_fn)
+    sparsities = get_sparsities_erdos_renyi(
+        all_masks,
+        default_sparsity,
+        custom_sparsity_map,
+        include_kernel=include_kernel,
+        extract_name_fn=extract_name_fn)
   elif method == 'random':
-    sparsities = _get_sparsities_uniform(all_masks, default_sparsity,
-                                         custom_sparsity_map,
-                                         extract_name_fn=extract_name_fn)
+    sparsities = get_sparsities_uniform(
+        all_masks,
+        default_sparsity,
+        custom_sparsity_map,
+        extract_name_fn=extract_name_fn)
   else:
     raise ValueError('Method: %s is not valid mask initialization method' %
                      method)
@@ -392,6 +399,6 @@ def get_stats(masked_layers, default_sparsity=0.8, method='erdos_renyi',
     n_param = np.prod(k_shape)
     total_params += n_param
     n_zeros += int(n_param*sparsities[kernel.name])
-      # print(param_count, n_mults, n_adds)
+    # print(param_count, n_mults, n_adds)
 
   return total_flops, total_param_bits, n_zeros/total_params

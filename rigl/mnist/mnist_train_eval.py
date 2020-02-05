@@ -46,7 +46,7 @@ flags.DEFINE_boolean('use_nesterov', True, 'Use nesterov momentum.')
 flags.DEFINE_integer('num_epochs', 200, 'Number of epochs to run.')
 flags.DEFINE_integer('lr_drop_epoch', 75, 'The epoch to start dropping lr.')
 flags.DEFINE_string('optimizer', 'momentum',
-                    'Optimizer to use. momentum or adam')
+                    'Optimizer to use. sgd, momentum or adam')
 flags.DEFINE_float('l2_scale', 1e-4, 'l2 loss scale')
 flags.DEFINE_string('network_type', 'fc',
                     'Type of the network. See below for available options.')

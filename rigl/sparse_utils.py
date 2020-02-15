@@ -399,6 +399,5 @@ def get_stats(masked_layers, default_sparsity=0.8, method='erdos_renyi',
     n_param = np.prod(k_shape)
     total_params += n_param
     n_zeros += int(n_param*sparsities[kernel.name])
-    # print(param_count, n_mults, n_adds)
 
   return total_flops, total_param_bits, n_zeros/total_params

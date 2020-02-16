@@ -224,9 +224,9 @@ flags.DEFINE_float('s_momentum', 0.9,
 flags.DEFINE_float('rigl_acc_scale', 0.,
                    'Used to scale initial accumulated gradients for new '
                    'connections.')
-flags.DEFINE_integer('maskupdate_begin_step', 5000, 'Step to begin pruning at.')
-flags.DEFINE_integer('maskupdate_end_step', 20000, 'Step to end pruning at.')
-flags.DEFINE_integer('maskupdate_frequency', 1000,
+flags.DEFINE_integer('maskupdate_begin_step', 0, 'Step to begin pruning at.')
+flags.DEFINE_integer('maskupdate_end_step', 25000, 'Step to end pruning at.')
+flags.DEFINE_integer('maskupdate_frequency', 100,
                      'Step interval between pruning.')
 flags.DEFINE_float(
     'first_layer_sparsity', 0.,

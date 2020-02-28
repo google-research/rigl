@@ -104,5 +104,13 @@ like following.
 ```bash
 python rigl/imagenet_resnet/imagenet_train_eval.py --mode=eval_once --training_method=baseline --eval_batch_size=100 --output_dir=/path/to/folder --eval_once_ckpt_prefix=s80_model.ckpt-1280000 --use_folder_stub=False
 ```
+
+We use the [Official TPU Code](https://github.com/tensorflow/tpu/tree/master/models/official/resnet)
+for loading ImageNet data. First clone the
+tensorflow/tpu repo and then add models/ folder to the python path.
+```bash
+git clone https://github.com/tensorflow/tpu.git
+export PYTHONPATH=$PYTHONPATH:$PWD/tpu/models/
+```
 ## Disclaimer
 This is not an official Google product.

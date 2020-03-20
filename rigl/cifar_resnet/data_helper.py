@@ -102,7 +102,8 @@ def input_fn(params):
   # example is seen twice.
   dataset = dataset.batch(batch_size)
 
-  images_batch, labels_batch = dataset.make_one_shot_iterator().get_next()
+  images_batch, labels_batch = tf.compat.v1.data.make_one_shot_iterator(
+      dataset).get_next()
 
   return (tf.reshape(images_batch, [batch_size, IMG_SIZE, IMG_SIZE, 3]),
           tf.reshape(labels_batch, [batch_size]))

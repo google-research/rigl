@@ -111,6 +111,10 @@ flags.DEFINE_integer(
           ' running out of memory.'))
 flags.DEFINE_float('label_smoothing', 0.1,
                    'Relax confidence in the labels by (1-label_smoothing).')
+flags.DEFINE_float(
+    'erk_power_scale', 1.0,
+    'Softens the ERK distribituion. Value 0 means uniform.'
+    '1 means regular ERK.')
 flags.DEFINE_integer(
     'train_steps',
     default=2,
@@ -588,8 +592,12 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
                                               FLAGS.output_dir, PARAM_SUFFIXES)
       all_masks = pruning.get_masks()
       assigner = sparse_utils.get_mask_init_fn(
-          all_masks, FLAGS.mask_init_method, FLAGS.end_sparsity,
-          CUSTOM_SPARSITY_MAP)
+          all_masks,
+          FLAGS.mask_init_method,
+          FLAGS.end_sparsity,
+          CUSTOM_SPARSITY_MAP,
+          erk_power_scale=FLAGS.erk_power_scale)
+
       def init_fn(scaffold, session):
         """A callable for restoring variable from a checkpoint."""
         del scaffold  # Unused.

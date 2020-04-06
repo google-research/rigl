@@ -195,15 +195,15 @@ def get_sparsities_erdos_renyi(all_masks,
     n_param = np.prod(shape_list)
     if var_name in custom_sparsity_map:
       sparsities[mask.name] = custom_sparsity_map[var_name]
-      tf.logging.info('layer: %s has custom sparsity: %f',
-                      (var_name, sparsities[mask.name]))
+      tf.logging.info('layer: %s has custom sparsity: %f', var_name,
+                      sparsities[mask.name])
     elif var_name in dense_layers:
       sparsities[mask.name] = 0.
     else:
       probability_one = eps * raw_probabilities[mask.name]
       sparsities[mask.name] = 1. - probability_one
-    tf.logging.info('layer: %s, shape: %s, sparsity: %f',
-                    (var_name, mask.shape, sparsities[mask.name]))
+    tf.logging.info('layer: %s, shape: %s, sparsity: %f', var_name, mask.shape,
+                    sparsities[mask.name])
   return sparsities
 
 
@@ -354,7 +354,7 @@ def get_mask_init_fn(all_masks,
       erk_power_scale=erk_power_scale,
       extract_name_fn=extract_name_fn)
   tf.logging.info('Per layer sparsities are like the following: %s',
-                  (str(sparsities)))
+                  str(sparsities))
   assign_ops = []
   for mask in all_masks:
     new_mask = mask_fn(mask, sparsities[mask.name], mask.dtype)

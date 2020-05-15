@@ -89,6 +89,7 @@ flags.DEFINE_bool(
     'transpose_input',
     default=False,
     help='Use TPU double transpose optimization')
+flags.DEFINE_bool('log_grad_norm', default=True, help='Log gradient norm.')
 flags.DEFINE_bool(
     'log_mask_imgs_each_iteration',
     default=False,
@@ -411,6 +412,13 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
   if training_method in ('set', 'momentum', 'rigl', 'static'):
     metrics['drop_fraction'] = optimizer.drop_fraction
 
+  def flatten_list_of_vars(var_list):
+    flat_vars = [tf.reshape(v, [-1]) for v in var_list]
+    return tf.concat(flat_vars, axis=-1)
+
+  if FLAGS.log_grad_norm and training_method not in ('scratch', 'baseline'):
+    metrics['grad_norm'] = tf.norm(
+        flatten_list_of_vars([g for g, _ in optimizer.grads_and_vars]))
   # Let's log some statistics from a single parameter-mask couple.
   # This is useful for debugging.
   test_var = pruning.get_weights()[0]

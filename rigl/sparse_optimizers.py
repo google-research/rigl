@@ -122,6 +122,8 @@ class SparseSETOptimizer(tf_optimizer.Optimizer):
       An `Operation` that applies the specified gradients. If `global_step`
       was not None, that operation also increments `global_step`.
     """
+    assert not hasattr(self, 'grads_and_vars')
+    self.grads_and_vars = grads_and_vars
     pre_op = self._before_apply_gradients(grads_and_vars)
     with ops.control_dependencies([pre_op]):
       optimizer_update = self._optimizer.apply_gradients(
@@ -573,6 +575,8 @@ class SparseRigLOptimizer(SparseSETOptimizer):
       An `Operation` that applies the specified gradients. If `global_step`
       was not None, that operation also increments `global_step`.
     """
+    assert not hasattr(self, 'grads_and_vars')
+    self.grads_and_vars = grads_and_vars
     pre_op = self._before_apply_gradients(grads_and_vars)
     with ops.control_dependencies([pre_op]):
       # Call this to create slots.
@@ -682,6 +686,9 @@ class SparseSnipOptimizer(tf_optimizer.Optimizer):
       An `Operation` that applies the specified gradients. If `global_step`
       was not None, that operation also increments `global_step`.
     """
+    assert not hasattr(self, 'grads_and_vars')
+    self.grads_and_vars = grads_and_vars
+
     def apply_gradient_op():
       return self._optimizer.apply_gradients(
           grads_and_vars, global_step=global_step, name=name)

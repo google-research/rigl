@@ -33,6 +33,7 @@ from rigl.imagenet_resnet import mobilenetv1_model
 from rigl.imagenet_resnet import mobilenetv2_model
 from rigl.imagenet_resnet import resnet_model
 from rigl.imagenet_resnet import utils
+from rigl.imagenet_resnet import vgg
 import tensorflow.compat.v1 as tf
 from official.resnet import imagenet_input
 from tensorflow.contrib import estimator as contrib_estimator
@@ -42,6 +43,16 @@ from tensorflow.contrib.tpu.python.tpu import tpu_config
 from tensorflow.contrib.tpu.python.tpu import tpu_estimator
 from tensorflow.contrib.training.python.training import evaluation
 from tensorflow_estimator.python.estimator import estimator
+
+DST_METHODS = [
+    'set',
+    'momentum',
+    'rigl',
+    'static'
+]
+
+ALL_METHODS = tuple(['scratch', 'baseline', 'snip'] + DST_METHODS)
+
 flags.DEFINE_string(
     'precision',
     default='float32',
@@ -89,7 +100,6 @@ flags.DEFINE_bool(
     'transpose_input',
     default=False,
     help='Use TPU double transpose optimization')
-flags.DEFINE_bool('log_grad_norm', default=True, help='Log gradient norm.')
 flags.DEFINE_bool(
     'log_mask_imgs_each_iteration',
     default=False,
@@ -177,8 +187,7 @@ flags.DEFINE_integer('export_model_freq', 2502,
                      'The rate at which estimator exports the model.')
 
 flags.DEFINE_enum(
-    'training_method', 'scratch',
-    ('scratch', 'set', 'baseline', 'momentum', 'rigl', 'static', 'snip'),
+    'training_method', 'scratch', ALL_METHODS,
     'Method used for training sparse network. `scratch` means initial mask is '
     'kept during training. `set` is for sparse evalutionary training and '
     '`baseline` is for dense baseline.')
@@ -251,7 +260,8 @@ flags.DEFINE_string(
     'Directory of a model from which to load only the parameters')
 flags.DEFINE_string(
     'model_architecture', 'resnet',
-    'Which architecture to use. Options: resnet, mobilenet_v1, mobilenet_v2.')
+    'Which architecture to use. Options: resnet, mobilenet_v1, mobilenet_v2.'
+    'vgg_16, vgg_a, vgg19.')
 flags.DEFINE_float('expansion_factor', 6.,
                    'how much to expand filters before depthwise conv')
 flags.DEFINE_float('training_steps_multiplier', 1.0,
@@ -273,6 +283,8 @@ def set_lr_schedule():
     LR_SCHEDULE = [(1.0, 8), (0.1, 40), (0.01, 75), (0.001, 95), (.0003, 120)]
   elif FLAGS.model_architecture == 'resnet':
     LR_SCHEDULE = [(1.0, 5), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
+  elif FLAGS.model_architecture.startswith('vgg'):
+    LR_SCHEDULE = [(1.0, 0), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
   else:
     raise ValueError('Unknown architecture ' + FLAGS.model_architecture)
   if FLAGS.training_steps_multiplier != 1.0:
@@ -397,8 +409,17 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
   # UPDATE_OPS needs to be added as a dependency due to batch norm
   update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
   with tf.control_dependencies(update_ops), tf.name_scope('train'):
-    train_op = optimizer.minimize(loss, global_step)
+    grads_and_vars = optimizer.compute_gradients(loss)
 
+    vars_with_grad = [v for g, v in grads_and_vars if g is not None]
+    if not vars_with_grad:
+      raise ValueError(
+          'No gradients provided for any variable, check your graph for ops'
+          ' that do not support gradients, between variables %s and loss %s.' %
+          ([str(v) for _, v in grads_and_vars], loss))
+
+    train_op = optimizer.apply_gradients(
+        grads_and_vars, global_step=global_step)
   metrics = {
       'global_step': tf.train.get_or_create_global_step(),
       'loss': loss,
@@ -409,16 +430,20 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
   }
 
   # Logging drop_fraction if dynamic sparse training.
-  if training_method in ('set', 'momentum', 'rigl', 'static'):
+  if training_method in DST_METHODS:
     metrics['drop_fraction'] = optimizer.drop_fraction
 
   def flatten_list_of_vars(var_list):
     flat_vars = [tf.reshape(v, [-1]) for v in var_list]
     return tf.concat(flat_vars, axis=-1)
 
-  if FLAGS.log_grad_norm and training_method not in ('scratch', 'baseline'):
-    metrics['grad_norm'] = tf.norm(
-        flatten_list_of_vars([g for g, _ in optimizer.grads_and_vars]))
+  if use_tpu:
+    reduced_grads = [tf.tpu.cross_replica_sum(g) for g, _ in grads_and_vars]
+  else:
+    reduced_grads = [g for g, _ in grads_and_vars]
+  metrics['grad_norm'] = tf.norm(flatten_list_of_vars(reduced_grads))
+  metrics['var_norm'] = tf.norm(
+      flatten_list_of_vars([v for _, v in grads_and_vars]))
   # Let's log some statistics from a single parameter-mask couple.
   # This is useful for debugging.
   test_var = pruning.get_weights()[0]
@@ -432,8 +457,8 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
   masks = pruning.get_masks()
   global_sparsity = sparse_utils.calculate_sparsity(masks)
   metrics['global_sparsity'] = global_sparsity
-  metrics.update(utils.mask_summaries(
-      masks[:4] + masks[-1:], with_img=FLAGS.log_mask_imgs_each_iteration))
+  metrics.update(
+      utils.mask_summaries(masks, with_img=FLAGS.log_mask_imgs_each_iteration))
 
   host_call = (functools.partial(utils.host_call_fn, output_dir),
                utils.format_tensors(metrics))
@@ -489,6 +514,12 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
           init_method=FLAGS.init_method,
           end_sparsity=FLAGS.end_sparsity,
           prune_first_layer=prune_first_layer)
+    elif FLAGS.model_architecture.startswith('vgg'):
+      network_func = functools.partial(
+          vgg.vgg,
+          vgg_type=FLAGS.model_architecture,
+          init_method=FLAGS.init_method,
+          end_sparsity=FLAGS.end_sparsity)
     else:
       raise ValueError('Unknown archiecture ' + FLAGS.archiecture)
     prune_last_layer = FLAGS.last_layer_sparsity != 0.
@@ -524,7 +555,6 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
         export_outputs={
             'classify': tf.estimator.export.PredictOutput(predictions)
         })
-
   output_dir = params['output_dir']
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
   one_hot_labels = tf.one_hot(labels, FLAGS.num_label_classes)
@@ -605,7 +635,6 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
           FLAGS.end_sparsity,
           CUSTOM_SPARSITY_MAP,
           erk_power_scale=FLAGS.erk_power_scale)
-
       def init_fn(scaffold, session):
         """A callable for restoring variable from a checkpoint."""
         del scaffold  # Unused.

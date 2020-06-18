@@ -240,6 +240,7 @@ def conv2d_fixed_padding(inputs,
                          data_format='channels_first',
                          end_sparsity=0.,
                          weight_decay=0.,
+                         init_scale=1.0,
                          name=None):
   """Strided 2-D convolution with explicit padding.
 
@@ -265,6 +266,7 @@ def conv2d_fixed_padding(inputs,
     end_sparsity: Desired sparsity at the end of training. Necessary to
       initialize an already sparse network.
     weight_decay: Weight for the l2 regularization loss.
+    init_scale: float, passed to the VarianceScalingInitializer.
     name: String that specifies name for model layer.
 
   Returns:
@@ -278,7 +280,7 @@ def conv2d_fixed_padding(inputs,
         inputs, kernel_size, data_format=data_format)
   padding = 'SAME' if strides == 1 else 'VALID'
 
-  kernel_initializer = tf.variance_scaling_initializer()
+  kernel_initializer = tf.variance_scaling_initializer(scale=init_scale)
   kernel_initializer = _pick_initializer(kernel_initializer, init_method,
                                          pruning_method, end_sparsity)
 

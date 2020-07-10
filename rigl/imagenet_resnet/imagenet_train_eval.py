@@ -204,6 +204,7 @@ flags.DEFINE_bool(
     'is_warm_up',
     default=True,
     help=('Boolean for whether to scale weight of regularizer.'))
+
 flags.DEFINE_float(
     'width', -1., 'Multiplier for the number of channels in each layer')
 # first and last layer are somewhat special.  First layer has almost no

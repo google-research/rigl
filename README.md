@@ -2,6 +2,7 @@
 <img src="https://github.com/google-research/rigl/blob/master/imgs/flops8.jpg" alt="80% Sparse Resnet-50" width="45%" align="middle">
 
 **Paper**: [https://arxiv.org/abs/1911.11134](https://arxiv.org/abs/1911.11134)
+**15min Presentation** [pml4dc](https://pml4dc.github.io/iclr2020/program/pml4dc_7.html) [icml](https://icml.cc/virtual/2020/paper/5808)
 
 ## Best Sparse Models
 Parameters are float, so each parameter is represented with 4 bytes. Uniform
@@ -111,6 +112,22 @@ tensorflow/tpu repo and then add models/ folder to the python path.
 ```bash
 git clone https://github.com/tensorflow/tpu.git
 export PYTHONPATH=$PYTHONPATH:$PWD/tpu/models/
+```
+
+## Other Implementations
+- [Graphcore-TF-MNIST](https://github.com/graphcore/examples/tree/master/applications/tensorflow/dynamic_sparsity/mnist_rigl): with sparse matrix ops!
+- [Micrograd-Pure Python](https://evcu.github.io/ml/sparse-micrograd/): This is
+a toy example with pure python sparse implementation. Caution, very slow but fun.
+
+## Citation
+```
+@incollection{rigl,
+ author = {Evci, Utku and Gale, Trevor and Menick, Jacob and Castro, Pablo Samuel and Elsen, Erich},
+ booktitle = {Proceedings of Machine Learning and Systems 2020},
+ pages = {471--481},
+ title = {Rigging the Lottery: Making All Tickets Winners},
+ year = {2020}
+}
 ```
 ## Disclaimer
 This is not an official Google product.

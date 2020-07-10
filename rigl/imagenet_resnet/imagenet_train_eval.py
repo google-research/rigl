@@ -397,6 +397,7 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
         drop_fraction=FLAGS.drop_fraction, stateless_seed_offset=FLAGS.seed,
         drop_fraction_anneal=FLAGS.drop_fraction_anneal,
         initial_acc_scale=FLAGS.rigl_acc_scale, use_tpu=use_tpu)
+
   elif training_method == 'snip':
     optimizer = sparse_optimizers.SparseSnipOptimizer(
         optimizer, mask_init_method=FLAGS.mask_init_method,
@@ -430,7 +431,8 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
   }
 
   # Logging drop_fraction if dynamic sparse training.
-  if training_method in DST_METHODS:
+  is_dst_method = training_method in DST_METHODS
+  if is_dst_method:
     metrics['drop_fraction'] = optimizer.drop_fraction
 
   def flatten_list_of_vars(var_list):

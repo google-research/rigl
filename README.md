@@ -2,7 +2,8 @@
 <img src="https://github.com/google-research/rigl/blob/master/imgs/flops8.jpg" alt="80% Sparse Resnet-50" width="45%" align="middle">
 
 **Paper**: [https://arxiv.org/abs/1911.11134](https://arxiv.org/abs/1911.11134)
-**15min Presentation** [pml4dc](https://pml4dc.github.io/iclr2020/program/pml4dc_7.html) [icml](https://icml.cc/virtual/2020/paper/5808)
+
+**15min Presentation** [[pml4dc](https://pml4dc.github.io/iclr2020/program/pml4dc_7.html)] [[icml](https://icml.cc/virtual/2020/paper/5808)]
 
 ## Best Sparse Models
 Parameters are float, so each parameter is represented with 4 bytes. Uniform

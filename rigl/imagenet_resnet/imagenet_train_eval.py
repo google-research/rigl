@@ -282,10 +282,9 @@ def set_lr_schedule():
   global LR_SCHEDULE
   if FLAGS.model_architecture == 'mobilenet_v2' or FLAGS.model_architecture == 'mobilenet_v1':
     LR_SCHEDULE = [(1.0, 8), (0.1, 40), (0.01, 75), (0.001, 95), (.0003, 120)]
-  elif FLAGS.model_architecture == 'resnet':
+  elif (FLAGS.model_architecture == 'resnet' or
+        FLAGS.model_architecture.startswith('vgg')):
     LR_SCHEDULE = [(1.0, 5), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
-  elif FLAGS.model_architecture.startswith('vgg'):
-    LR_SCHEDULE = [(1.0, 0), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
   else:
     raise ValueError('Unknown architecture ' + FLAGS.model_architecture)
   if FLAGS.training_steps_multiplier != 1.0:

@@ -536,9 +536,15 @@ class SparseRigLOptimizer(SparseSETOptimizer):
                use_tpu=False, name='SparseRigLOptimizer',
                stateless_seed_offset=0):
     super(SparseRigLOptimizer, self).__init__(
-        optimizer, begin_step, end_step, frequency, drop_fraction=drop_fraction,
-        drop_fraction_anneal=drop_fraction_anneal, grow_init=grow_init,
-        use_locking=use_locking, name='SparseMomentumOptimizer',
+        optimizer,
+        begin_step,
+        end_step,
+        frequency,
+        drop_fraction=drop_fraction,
+        drop_fraction_anneal=drop_fraction_anneal,
+        grow_init=grow_init,
+        use_locking=use_locking,
+        name='SparseRigLOptimizer',
         stateless_seed_offset=stateless_seed_offset)
     self._initial_acc_scale = initial_acc_scale
     self._use_tpu = use_tpu

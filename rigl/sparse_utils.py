@@ -33,7 +33,7 @@ def mask_extract_name_fn(mask_name):
 
 
 def get_n_zeros(size, sparsity):
-  return int(np.ceil(sparsity * size))
+  return int(np.floor(sparsity * size))
 
 
 def calculate_sparsity(masks):

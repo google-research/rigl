@@ -5,6 +5,11 @@
 
 **15min Presentation** [[pml4dc](https://pml4dc.github.io/iclr2020/program/pml4dc_7.html)] [[icml](https://icml.cc/virtual/2020/paper/5808)]
 
+## Colabs for Calculating FLOPs of Sparse Models
+[MobileNet-v1](https://github.com/google-research/rigl/blob/master/rigl/imagenet_resnet/colabs/MobileNet_Counting.ipynb)
+
+[ResNet-50](https://github.com/google-research/rigl/blob/master/rigl/imagenet_resnet/colabs/Resnet_50_Param_Flops_Counting.ipynb)
+
 ## Best Sparse Models
 Parameters are float, so each parameter is represented with 4 bytes. Uniform
 sparsity distribution keeps first layer dense therefore have slightly larger size

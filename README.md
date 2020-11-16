@@ -18,8 +18,8 @@ In this section we extend the training of sparse models by 5x. Note that sparse
 models require much less FLOPs per training iteration and therefore most of the
 extended trainings cost less FLOPs than baseline dense training.
 
-With using only 2.32x of the original FLOPS we can train 99% sparse Resnet-50
-that obtains an impressive 66.94% test accuracy.
+Observing improving performance we wanted to understand where the performance of sparse networks saturates. Longest training we ran had 100x training length of the original
+100 epoch ImageNet training. This training costs 5.8x of the original dense training FLOPS and the resulting 99% sparse Resnet-50 achieves an impressive 68.15% test accuracy (vs 5x training accuracy of 61.86%).
 
 | S. Distribution |  Sparsity | Training FLOPs | Inference FLOPs | Model Size (Bytes) | Top-1 Acc | Ckpt         |
 |-----------------|-----------|----------------|-----------------|-------------------------------------|-----------|--------------|
@@ -32,8 +32,24 @@ that obtains an impressive 66.94% test accuracy.
 | Uniform         | 0.95      | 0.42x          | 0.08x           | 8.433                               | 73.22     | [link](https://storage.googleapis.com/rigl/s95uniform5x.tar.gz) |
 | ERK             | 0.965     | 0.45x          | 0.09x           | 6.904                               | 72.77     | [link](https://storage.googleapis.com/rigl/s965erk5x.tar.gz) |
 | Uniform         | 0.965     | 0.34x          | 0.07x           | 6.904                               | 71.31     | [link](https://storage.googleapis.com/rigl/s965uniform5x.tar.gz) |
-| ERK             | 0.99      | 0.29x          | 0.05x           | 4.354                               | 61.86     | [link](https://storage.googleapis.com/rigl/s99erk5x.tar.gz) |
-| ERK             | **0.99**  | 2.32x          | 0.05x           | 4.354                               | **66.94** | [link](https://storage.googleapis.com/rigl/s99erk40x.tar.gz) |
+| ERK             | 0.99      | 0.29x          | 0.05x           | 4.354                    | 61.86     | [link](https://storage.googleapis.com/rigl/s99erk5x.tar.gz) |
+| ERK             | 0.99  | 0.58x          | 0.05x           | 4.354                               | 63.89 | [link](https://storage.googleapis.com/rigl/s99erk10x.tar.gz) |
+| ERK             | 0.99  | 2.32x          | 0.05x           | 4.354                               | 66.94 | [link](https://storage.googleapis.com/rigl/s99erk40x.tar.gz) |
+| ERK             | **0.99**  | 5.8x          | 0.05x           | 4.354                               | **68.15** | [link](https://storage.googleapis.com/rigl/s99erk100x.tar.gz) |
+
+We also ran extended training runs with MobileNet-v1. Again training 100x more,
+we were not able saturate the performance. Training longer consistently achieved
+better results.
+
+| S. Distribution |  Sparsity | Training FLOPs | Inference FLOPs | Model Size (Bytes) | Top-1 Acc | Ckpt         |
+|-----------------|-----------|----------------|-----------------|-------------------------------------|-----------|--------------|
+| - (DENSE)       | 0         | 4.5e17         | 1.14e9           | 16.864                            | 72.1      | -            |
+| ERK             | 0.89       | 1.39x         | 0.21x           | 2.392                             | 69.31     | [link](https://storage.googleapis.com/rigl/mbv1_s90_erk10x.tar.gz) |
+| ERK             | 0.89       | 2.79x          | 0.21x         | 2.392                              | 70.63     | [link](https://storage.googleapis.com/rigl/mbv1_s90_erk50x.tar.gz) |
+| Uniform         | 0.89       | 1.25x          | 0.09x           | 2.392                              | 69.28     | [link](https://storage.googleapis.com/rigl/mbv1_s90_uniform10x.tar.gz) |
+| Uniform         | 0.89       | 6.25x          | 0.09x           | 2.392                              | 70.25     | [link](https://storage.googleapis.com/rigl/mbv1_s90_uniform50x.tar.gz) |
+| Uniform         | 0.89       | 12.5x          | 0.09x           | 2.392                              | 70.59     | [link](https://storage.googleapis.com/rigl/mbv1_s90_uniform100x.tar.gz) |
+
 
 ### 1x Training Results
 
@@ -43,6 +59,20 @@ that obtains an impressive 66.94% test accuracy.
 | Uniform         | 0.8       | 0.23x          | 0.23x           | 23.685                              | 74.60     | [link](https://storage.googleapis.com/rigl/s80uniform1x.tar.gz) |
 | ERK             | 0.9       | 0.24x          | 0.24x           | 13.499                              | 73.07     | [link](https://storage.googleapis.com/rigl/s90erk1x.tar.gz) |
 | Uniform         | 0.9       | 0.13x          | 0.13x           | 13.532                              | 72.02     | [link](https://storage.googleapis.com/rigl/s90uniform1x.tar.gz) |
+
+### Evaluating checkpoints
+Download the checkpoints and run the evaluation on ERK checkpoints with the
+following:
+
+```python
+python imagenet_train_eval.py --mode=eval_once --output_dir=path/to/ckpt/folder \
+    --eval_once_ckpt_prefix=model.ckpt-3200000 --use_folder_stub=False \
+    --training_method=rigl --mask_init_method=erdos_renyi_kernel \
+    --first_layer_sparsity=-1
+```
+
+When running checkpoints with uniform sparsity distribution use `--mask_init_method=random` and `--first_layer_sparsity=0`. Set 
+`--model_architecture=mobilenet_v1` when evaluating mobilenet checkpoints.
 
 ## Sparse Training Algorithms
 In this repository we implement following dynamic sparsity strategies:

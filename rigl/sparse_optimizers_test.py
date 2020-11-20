@@ -466,5 +466,123 @@ class SparseSnipOptimizerTest(tf.test.TestCase, parameterized.TestCase):
       self.assertAllEqual(mask_after, mask_before)
 
 
+class SparseDNWOptimizerTest(tf.test.TestCase, parameterized.TestCase):
+
+  def _setup_graph(self,
+                   default_sparsity,
+                   mask_init_method,
+                   custom_sparsity_map,
+                   n_inp=3,
+                   n_out=5):
+    """Setups a trivial training procedure for sparse training."""
+    tf.reset_default_graph()
+    optim = tf.train.GradientDescentOptimizer(1e-3)
+    sparse_optim = sparse_optimizers.SparseDNWOptimizer(
+        optim,
+        default_sparsity,
+        mask_init_method,
+        custom_sparsity_map=custom_sparsity_map)
+
+    inp_values = np.arange(1, n_inp + 1)
+    scale_vector_values = np.random.uniform(size=(n_out,)) - 0.5
+    # The gradient is the outer product of input and the output gradients.
+    # Since the loss is sample sum the output gradient is equal to the scale
+    # vector.
+    expected_grads = np.outer(inp_values, scale_vector_values)
+
+    x = tf.reshape(tf.constant(inp_values, dtype=tf.float32), (1, n_inp))
+    y = layers.masked_fully_connected(x, n_out, activation_fn=None)
+    scale_vector = tf.constant(scale_vector_values, dtype=tf.float32)
+
+    y = y * scale_vector
+    loss = tf.reduce_sum(y)
+
+    global_step = tf.train.get_or_create_global_step()
+    grads_and_vars = sparse_optim.compute_gradients(loss)
+    train_op = sparse_optim.apply_gradients(
+        grads_and_vars, global_step=global_step)
+    # Init
+    sess = tf.Session()
+    init = tf.global_variables_initializer()
+    sess.run(init)
+    mask = pruning.get_masks()[0]
+    weights = pruning.get_weights()[0]
+    return (sess, train_op, (expected_grads, grads_and_vars), mask, weights)
+
+  @parameterized.parameters((3, 4, 0.5), (5, 3, 0.8), (8, 5, 0.8))
+  def testDNWSparsity(self, n_inp, n_out, default_sparsity):
+    """Checking whether masked_grad is calculated after apply_gradients."""
+    # No drop since we don't want to change the mask but check whether the grad
+    # is calculated after the gradient step.
+    sess, train_op, _, mask, _ = self._setup_graph(
+        default_sparsity, 'random', {}, n_inp=n_inp, n_out=n_out)
+    _ = sess.run([train_op])
+    dnw_mask, = sess.run([mask])
+    n_ones = np.sum(dnw_mask)
+    n_zeros = dnw_mask.size - n_ones
+    n_zeros_expected = sparse_utils.get_n_zeros(dnw_mask.size, default_sparsity)
+    self.assertEqual(n_zeros, n_zeros_expected)
+
+  @parameterized.parameters((3, 4, 0.5), (5, 3, 0.8), (8, 5, 0.8))
+  def testWeightsUsed(self, n_inp, n_out, default_sparsity):
+    """Checking whether masked_grad is calculated after apply_gradients."""
+    # No drop since we don't want to change the mask but check whether the grad
+    # is calculated after the gradient step.
+    sess, train_op, _, mask, weights = self._setup_graph(
+        default_sparsity, 'random', {}, n_inp=n_inp, n_out=n_out)
+    # Calculate sensitivity scores.
+    weights, = sess.run([weights])
+    expected_scores = np.abs(weights)
+    _ = sess.run([train_op])
+    dnw_mask, = sess.run([mask])
+    kept_connection_scores = expected_scores[dnw_mask == 1]
+    min_score_kept = np.min(kept_connection_scores)
+
+    dnw_mask_connection_scores = expected_scores[dnw_mask == 0]
+    max_score_removed = np.max(dnw_mask_connection_scores)
+    self.assertLessEqual(max_score_removed, min_score_kept)
+
+  @parameterized.parameters((3, 4, 0.5), (5, 3, 0.8), (8, 5, 0.8))
+  def testGradientIsDense(self, n_inp, n_out, default_sparsity):
+    """Checking whether calculated gradients are dense."""
+    sess, _, grad_info, _, _ = self._setup_graph(
+        default_sparsity, 'random', {}, n_inp=n_inp, n_out=n_out)
+    expected_grad, grads_and_vars = grad_info
+    grad, = sess.run([grads_and_vars[0][0]])
+    self.assertAllClose(expected_grad, grad)
+
+  @parameterized.parameters((3, 4, 0.5), (5, 3, 0.8), (8, 5, 0.8))
+  def testDNWUpdates(self, n_inp, n_out, default_sparsity):
+    """Checking whether mask is updated correctly."""
+    sess, train_op, _, mask, weights = self._setup_graph(
+        default_sparsity, 'random', {}, n_inp=n_inp, n_out=n_out)
+    # On all iterations mask should have least magnitude connections.
+    for _ in range(5):
+      sess.run([train_op])
+      mask_after, weights_after = sess.run([mask, weights])
+
+      kept_connection_magnitudes = np.abs(weights_after[mask_after == 1])
+      min_score_kept = np.min(kept_connection_magnitudes)
+
+      removed_connection_magnitudes = np.abs(weights_after[mask_after == 0])
+      max_score_removed = np.max(removed_connection_magnitudes)
+      self.assertLessEqual(max_score_removed, min_score_kept)
+
+  @parameterized.parameters((3, 4, 0.5), (5, 3, 0.8), (8, 5, 0.8))
+  def testSparsityAfterDNWUpdates(self, n_inp, n_out, default_sparsity):
+    """Checking whether mask is updated correctly."""
+    sess, train_op, _, mask, _ = self._setup_graph(
+        default_sparsity, 'random', {}, n_inp=n_inp, n_out=n_out)
+    # On all iterations mask should have least magnitude connections.
+    for _ in range(5):
+      sess.run([train_op])
+      dnw_mask, = sess.run([mask])
+      n_ones = np.sum(dnw_mask)
+      n_zeros = dnw_mask.size - n_ones
+      n_zeros_expected = sparse_utils.get_n_zeros(dnw_mask.size,
+                                                  default_sparsity)
+      self.assertEqual(n_zeros, n_zeros_expected)
+
+
 if __name__ == '__main__':
   tf.test.main()

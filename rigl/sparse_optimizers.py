@@ -36,6 +36,8 @@ from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import stateless_random_ops
 from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
+
 from tensorflow.python.tpu.ops import tpu_ops
 from tensorflow.python.training import learning_rate_decay
 from tensorflow.python.training import moving_averages
@@ -113,7 +115,8 @@ class SparseSETOptimizer(tf_optimizer.Optimizer):
 
   def compute_gradients(self, loss, **kwargs):
     """Wraps the compute gradient of passed optimizer."""
-    return self._optimizer.compute_gradients(loss, **kwargs)
+    result = self._optimizer.compute_gradients(loss, **kwargs)
+    return result
 
   def apply_gradients(self, grads_and_vars, global_step=None, name=None):
     """Wraps the original apply_gradient of the optimizer.
@@ -831,3 +834,146 @@ class SparseSnipOptimizer(tf_optimizer.Optimizer):
             math_ops.logical_not(self.is_snipped)), snip_op, apply_gradient_op)
 
     return maybe_snip_op
+
+
+class SparseDNWOptimizer(tf_optimizer.Optimizer):
+  """Implementation of DNW optimizer.
+
+  Implementation of DNW.
+  See https://arxiv.org/pdf/1906.00586.pdf
+  This optimizer ensures the mask is updated at every iteration, according to
+  the current set of weights. It uses dense gradient to update weights.
+
+  Attributes:
+    optimizer: tf.train.Optimizer
+    default_sparsity: float, between 0 and 1.
+    mask_init_method: str, used to determine mask initializations.
+    custom_sparsity_map: dict, <str, float> key/value pairs where the mask
+      correspond whose name is '{key}/mask:0' is set to the corresponding
+        sparsity value.
+    use_tpu: bool, if true the masked_gradients are aggregated.
+    use_locking: bool, passed to the super.
+    name: bool, passed to the super.
+  """
+
+  def __init__(self,
+               optimizer,
+               default_sparsity,
+               mask_init_method,
+               custom_sparsity_map=None,
+               use_tpu=False,
+               use_locking=False,
+               name='SparseDNWOptimizer'):
+    super(SparseDNWOptimizer, self).__init__(use_locking, name)
+    self._optimizer = optimizer
+    self._use_tpu = use_tpu
+    self._default_sparsity = default_sparsity
+    self._mask_init_method = mask_init_method
+    self._custom_sparsity_map = custom_sparsity_map
+
+  def compute_gradients(self, loss, var_list=None, **kwargs):
+    """Wraps the compute gradient of passed optimizer."""
+    # Replace masked variables with masked_weights so that the gradient is dense
+    # and not masked
+    if var_list is None:
+      var_list = (
+          variables.trainable_variables() +
+          ops.get_collection(ops.GraphKeys.TRAINABLE_RESOURCE_VARIABLES))
+    var_list = self.replace_with_masked_weights(var_list)
+    grads_and_vars = self._optimizer.compute_gradients(
+        loss, var_list=var_list, **kwargs)
+    return self.replace_masked_weights(grads_and_vars)
+
+  def replace_with_masked_weights(self, var_list):
+    """Replaces masked variables with masked weights."""
+    weight2masked_weights = {
+        w.name: mw
+        for w, mw in zip(self.get_weights(), self.get_masked_weights())
+    }
+    updated_var_list = [weight2masked_weights.get(w.name, w) for w in var_list]
+    return updated_var_list
+
+  def replace_masked_weights(self, grads_and_vars):
+    """Replaces masked weight tensords with weight variables."""
+    masked_weights2weight = {
+        mw.name: w
+        for w, mw in zip(self.get_weights(), self.get_masked_weights())
+    }
+    updated_grads_and_vars = [
+        (g, masked_weights2weight.get(w.name, w)) for g, w in grads_and_vars
+    ]
+    return updated_grads_and_vars
+
+  def apply_gradients(self, grads_and_vars, global_step=None, name=None):
+    """Wraps the original apply_gradient of the optimizer.
+
+    Args:
+      grads_and_vars: List of (gradient, variable) pairs as returned by
+        `compute_gradients()`.
+      global_step: Optional `Variable` to increment by one after the variables
+        have been updated.
+      name: Optional name for the returned operation.  Default to the name
+        passed to the `Optimizer` constructor.
+
+    Returns:
+      An `Operation` that applies the specified gradients. If `global_step`
+      was not None, that operation also increments `global_step`.
+    """
+    optimizer_update = self._optimizer.apply_gradients(
+        grads_and_vars, global_step=global_step, name=name)
+    vars_dict = {
+        re.findall('(.+)/weights:0', var.name)[0]: var
+        for var in self.get_weights()
+    }
+
+    def dnw_fn(mask, sparsity, dtype):
+      """Creates a mask with smallest magnitudes with deterministic sparsity.
+
+      Args:
+        mask: tf.Tensor, used to obtain correct corresponding gradient.
+        sparsity: float, between 0 and 1.
+        dtype: tf.dtype, type of the return value.
+
+      Returns:
+        tf.Tensor
+      """
+      del dtype
+      var_name = sparse_utils.mask_extract_name_fn(mask.name)
+      v = vars_dict[var_name]
+      score_drop = math_ops.abs(v)
+      n_total = np.prod(score_drop.shape.as_list())
+      n_prune = sparse_utils.get_n_zeros(n_total, sparsity)
+      n_keep = n_total - n_prune
+
+      # Sort the entire array since the k needs to be constant for TPU.
+      _, sorted_indices = nn_ops.top_k(
+          array_ops.reshape(score_drop, [-1]), k=n_total)
+      sorted_indices_ex = array_ops.expand_dims(sorted_indices, 1)
+      # We will have zeros after having `n_keep` many ones.
+      new_values = array_ops.where(
+          math_ops.range(n_total) < n_keep,
+          array_ops.ones_like(sorted_indices, dtype=mask.dtype),
+          array_ops.zeros_like(sorted_indices, dtype=mask.dtype))
+      new_mask = array_ops.scatter_nd(sorted_indices_ex, new_values,
+                                      new_values.shape)
+      return array_ops.reshape(new_mask, mask.shape)
+
+    with ops.control_dependencies([optimizer_update]):
+      all_masks = self.get_masks()
+      mask_update_op = sparse_utils.get_mask_init_fn(
+          all_masks,
+          self._mask_init_method,
+          self._default_sparsity,
+          self._custom_sparsity_map,
+          mask_fn=dnw_fn)
+
+    return mask_update_op
+
+  def get_weights(self):
+    return pruning.get_weights()
+
+  def get_masks(self):
+    return pruning.get_masks()
+
+  def get_masked_weights(self):
+    return pruning.get_masked_weights()

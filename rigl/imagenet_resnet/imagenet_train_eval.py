@@ -51,7 +51,8 @@ DST_METHODS = [
     'static'
 ]
 
-ALL_METHODS = tuple(['scratch', 'baseline', 'snip'] + DST_METHODS)
+ALL_METHODS = tuple(['scratch', 'baseline', 'snip', 'dnw'] + DST_METHODS)
+NO_MASK_INIT_METHODS = ('snip', 'dnw', 'baseline')
 
 flags.DEFINE_string(
     'precision',
@@ -403,6 +404,13 @@ def train_function(training_method, loss, cross_loss, reg_loss, output_dir,
         optimizer, mask_init_method=FLAGS.mask_init_method,
         custom_sparsity_map=CUSTOM_SPARSITY_MAP,
         default_sparsity=FLAGS.end_sparsity, use_tpu=use_tpu)
+  elif training_method == 'dnw':
+    optimizer = sparse_optimizers.SparseDNWOptimizer(
+        optimizer,
+        mask_init_method=FLAGS.mask_init_method,
+        custom_sparsity_map=CUSTOM_SPARSITY_MAP,
+        default_sparsity=FLAGS.end_sparsity,
+        use_tpu=use_tpu)
   elif training_method in ('scratch', 'baseline'):
     pass
   else:
@@ -614,7 +622,8 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
     eval_metrics = (metric_fn, tensors)
 
   if (FLAGS.load_mask_dir and
-      FLAGS.training_method not in ('snip', 'baseline')):
+      FLAGS.training_method not in NO_MASK_INIT_METHODS):
+
     def scaffold_fn():
       """For initialization, passed to the estimator."""
       utils.initialize_parameters_from_ckpt(FLAGS.load_mask_dir,
@@ -624,7 +633,8 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
                                               FLAGS.output_dir, PARAM_SUFFIXES)
       return tf.train.Scaffold()
   elif (FLAGS.mask_init_method and
-        FLAGS.training_method not in ('snip', 'baseline')):
+        FLAGS.training_method not in NO_MASK_INIT_METHODS):
+
     def scaffold_fn():
       """For initialization, passed to the estimator."""
       if FLAGS.initial_value_checkpoint:
@@ -643,7 +653,7 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
         session.run(assigner)
       return tf.train.Scaffold(init_fn=init_fn)
   else:
-    assert FLAGS.training_method in ('snip', 'baseline')
+    assert FLAGS.training_method in NO_MASK_INIT_METHODS
     scaffold_fn = None
     tf.logging.info('No mask is set, starting dense.')
 

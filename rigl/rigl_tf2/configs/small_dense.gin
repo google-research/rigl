@@ -1,0 +1,19 @@
+training.total_steps = 11719 # 6e4/128*25 epochs=11719
+training.batch_size = 128
+training.save_freq = 500  # Log every 5 steps.
+training.log_freq = 200
+network.network_name = 'lenet5'
+network.weight_decay = 0.0005
+# original_hidden_size/sqrt(20) -> 20 comes from 95% sparsity.
+# following lenet has 2399 params vs 2396 (95% sparse lenet5).
+lenet5.hidden_sizes = (3, 3, 27, 20)
+lenet5.use_batch_norm = False
+optimizer.name = "momentum"
+optimizer.learning_rate = 0.05
+optimizer.momentum = 0.9
+optimizer.clipvalue = None
+optimizer.clipnorm = None
+# NON-DEFAULT
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+pruning.begin_step = 100000000 # High begin_step, so it never starts.

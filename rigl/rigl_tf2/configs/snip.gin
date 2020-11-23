@@ -1,0 +1,25 @@
+training.use_metainit = False
+training.total_steps = 11719 # 6e4/128*25 epochs=11719
+training.batch_size = 128
+training.save_freq = 500  # Log every 5 steps.
+training.log_freq = 200
+training.gradient_regularization=0
+optimizer.name = "momentum"
+optimizer.learning_rate = 0.1
+optimizer.momentum = 0.9
+optimizer.clipvalue = None
+optimizer.clipnorm = None
+
+# NON-DEFAULT
+network.weight_decay = 0.0002
+# Disable GMP pruning.
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+# Enable one shot pruning.
+training.oneshot_prune_fraction = 0.95
+training.val_batch_size = 5000
+pruning.begin_step = 100000000 # High begin_step, so it never starts.
+
+# Mask Updates
+mask_updater.update_alg = 'rigl_s' # Prune part of rigl_s corresponds to snip.
+mask_updater.last_update_step=0  # Never updates.

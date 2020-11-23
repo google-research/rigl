@@ -1,0 +1,18 @@
+training.total_steps = 11719 # 6e4/128*25 epochs=11719
+training.batch_size = 128
+training.save_freq = 500  # Log every 5 steps.
+training.log_freq = 200
+network.network_name = 'mlp'
+network.weight_decay = 0.0001
+# (28*28*300 + 300*100 + 100*10)*0.02 + 410 = 5734 params
+# (28*28*8 + 8*8 + 8*10) + 8+8+10 = 6442
+mlp.hidden_sizes = (8, 8)
+optimizer.name = "momentum"
+optimizer.learning_rate = 0.2
+optimizer.momentum = 0.9
+optimizer.clipvalue = None
+optimizer.clipnorm = None
+# NON-DEFAULT
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+pruning.begin_step = 100000000 # High begin_step, so it never starts.

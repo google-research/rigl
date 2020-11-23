@@ -1,0 +1,7 @@
+# NON-DEFAULT
+network.mask_init_path = '/tmp/sparse_spectrum/ckpt-11719'
+network.weight_init_path = '/tmp/sparse_spectrum/ckpt-0'
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+pruning.begin_step = 100000000 # High begin_step, so it never starts.
+

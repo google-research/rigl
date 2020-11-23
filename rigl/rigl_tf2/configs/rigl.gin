@@ -1,0 +1,28 @@
+training.use_metainit = False
+training.total_steps = 11719 # 6e4/128*25 epochs=11719
+training.batch_size = 128
+training.save_freq = 500  # Log every 5 steps.
+training.log_freq = 200
+training.gradient_regularization=0
+
+optimizer.name = "momentum"
+optimizer.learning_rate = 0.05
+optimizer.momentum = 0.9
+optimizer.clipvalue = None
+optimizer.clipnorm = None
+
+# NON-DEFAULT
+network.mask_init_path = '/tmp/sparse_spectrum/ckpt-11719'
+network.weight_init_method = None
+network.weight_decay = 0.0005
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+pruning.begin_step = 100000000 # High begin_step, so it never starts.
+unit_scaled_init.method='fanin_normal'
+
+# Mask Updates
+mask_updater.update_alg = 'rigl'
+mask_updater.schedule_alg = 'lr'
+mask_updater.update_freq = 100
+mask_updater.init_drop_fraction = 0.3
+mask_updater.last_update_step=-1

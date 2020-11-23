@@ -1,0 +1,15 @@
+training.use_metainit = False
+# NON-DEFAULT
+network.mask_init_path = '/tmp/sparse_spectrum/ckpt-11719'
+network.weight_init_method = None
+pruning.mode = 'constant'
+pruning.final_sparsity = 0.
+pruning.begin_step = 100000000 # High begin_step, so it never starts.
+unit_scaled_init.method='fanin_normal'
+
+# Mask Updates
+mask_updater.update_alg = 'set'
+mask_updater.schedule_alg = 'lr'
+mask_updater.update_freq = 500
+mask_updater.init_drop_fraction = 0.3
+mask_updater.last_update_step=-1

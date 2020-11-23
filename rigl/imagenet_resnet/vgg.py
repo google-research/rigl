@@ -138,7 +138,8 @@ def vgg_net(inputs,
         inputs,
         net_cfg[0],
         new_sparse_conv2d,
-        int(64 * width), [3, 3],
+        int(64 * width),
+        3,
         strides=1,
         scope='conv1')
     net = layers.max_pool2d(net, [2, 2], scope='pool1')
@@ -146,7 +147,8 @@ def vgg_net(inputs,
         net,
         net_cfg[1],
         new_sparse_conv2d,
-        int(128 * width), [3, 3],
+        int(128 * width),
+        3,
         strides=1,
         scope='conv2')
     net = layers.max_pool2d(net, [2, 2], scope='pool2')
@@ -154,7 +156,8 @@ def vgg_net(inputs,
         net,
         net_cfg[2],
         new_sparse_conv2d,
-        int(256 * width), [3, 3],
+        int(256 * width),
+        3,
         strides=1,
         scope='conv3')
     net = layers.max_pool2d(net, [2, 2], scope='pool3')
@@ -162,7 +165,8 @@ def vgg_net(inputs,
         net,
         net_cfg[3],
         new_sparse_conv2d,
-        int(512 * width), [3, 3],
+        int(512 * width),
+        3,
         strides=1,
         scope='conv4')
     net = layers.max_pool2d(net, [2, 2], scope='pool4')
@@ -170,7 +174,8 @@ def vgg_net(inputs,
         net,
         net_cfg[4],
         new_sparse_conv2d,
-        int(512 * width), [3, 3],
+        int(512 * width),
+        3,
         strides=1,
         scope='conv5')
 
@@ -186,11 +191,7 @@ def vgg_net(inputs,
       #                      scope='dropout7')
       if prune_last_layer:
         net = new_sparse_conv2d(
-            net,
-            num_classes, [1, 1],
-            activation_fn=None,
-            strides=1,
-            scope='fc8')
+            net, num_classes, 1, activation_fn=None, strides=1, scope='fc8')
       else:
         net = layers.conv2d(
             net, num_classes, [1, 1], activation_fn=None, scope='fc8')

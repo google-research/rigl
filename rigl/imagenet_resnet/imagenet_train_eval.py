@@ -263,7 +263,7 @@ flags.DEFINE_string(
 flags.DEFINE_string(
     'model_architecture', 'resnet',
     'Which architecture to use. Options: resnet, mobilenet_v1, mobilenet_v2.'
-    'vgg_16, vgg_a, vgg19.')
+    'vgg_16, vgg_a, vgg_19.')
 flags.DEFINE_float('expansion_factor', 6.,
                    'how much to expand filters before depthwise conv')
 flags.DEFINE_float('training_steps_multiplier', 1.0,
@@ -285,7 +285,7 @@ def set_lr_schedule():
     LR_SCHEDULE = [(1.0, 8), (0.1, 40), (0.01, 75), (0.001, 95), (.0003, 120)]
   elif (FLAGS.model_architecture == 'resnet' or
         FLAGS.model_architecture.startswith('vgg')):
-    LR_SCHEDULE = [(1.0, 5), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
+    LR_SCHEDULE = [(1.0, 0), (0.1, 30), (0.01, 70), (0.001, 90), (.0001, 120)]
   else:
     raise ValueError('Unknown architecture ' + FLAGS.model_architecture)
   if FLAGS.training_steps_multiplier != 1.0:

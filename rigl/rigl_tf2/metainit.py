@@ -98,7 +98,8 @@ def meta_init(model, loss, x_shape, y_shape, n_params, learning_rate=0.001,
           (2 * tf.cast(tf.greater_equal(g, 0), tf.float32)) - 1))))
                    for g, p in zip(grad, prod)]
       if mask_gradient_fn is not None:
-        meta_loss = mask_gradient_fn(model, meta_loss, model.trainable_variables)
+        meta_loss = mask_gradient_fn(model, meta_loss,
+                                     model.trainable_variables)
       meta_loss = sum([tf.reduce_sum(m) for m in meta_loss]) / n_params
     tf.summary.scalar("meta_loss", meta_loss)
 

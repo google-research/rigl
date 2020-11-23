@@ -229,134 +229,6 @@ class RigLInverted(RigL):
     return [-tf.abs(g) for g in self._get_gradients(all_vars)]
 
 
-class RigLGrasp(RigL):
-  """Implementation of dynamic sparsity optimizers.
-
-  Implementation of RigL.
-  """
-
-  def get_drop_scores(self, all_vars, all_masks):
-    with tf.GradientTape(persistent=True) as tape:
-      batch_loss = self._loss_fn()
-      grads = tape.gradient(batch_loss, all_vars)
-      hv = 0
-      for grad in grads:
-        hv += tf.reduce_sum(tf.stop_gradient(grad) * grad)
-    hvs = tape.gradient(hv, all_vars)
-    scores = []
-    for mask, var, hv in zip(all_masks, all_vars, hvs):
-      # Note that this is not the original formulation. We are using abs here
-      # since without that we get bad results. We don't expect this cahange to
-      # improve the gradient flow.
-      score = tf.math.abs(mask * var * hv)
-      scores.append(score)
-    return scores
-
-
-class RigLSaliency(RigL):
-  """Implementation of dynamic sparsity optimizers.
-
-  Implementation of RigL.
-  """
-
-  def get_drop_scores(self, all_vars, all_masks, noise_std=0):
-    grads = self._get_gradients(all_vars)
-    scores = []
-    for mask, var, grad in zip(all_masks, all_vars, grads):
-      score = tf.math.abs(mask * var * grad)
-      if noise_std != 0:
-        score += self._random_normal(
-            score.shape,
-            stddev=noise_std,
-            dtype=score.dtype,
-            seed=(hash(var.name + 'drop')))
-      scores.append(score)
-    return scores
-
-
-class RigLAuto(MaskUpdater):
-  """Implementation of dynamic sparsity optimizers with unified score."""
-
-  def __init__(self,
-               model,
-               optimizer,
-               use_stateless=True,
-               stateless_seed_offset=0,
-               loss_fn=None,
-               lrcoef=1):
-    self._lrcoef = lrcoef
-    super(RigLAuto, self).__init__(
-        model,
-        optimizer,
-        use_stateless=use_stateless,
-        stateless_seed_offset=stateless_seed_offset,
-        loss_fn=loss_fn)
-
-  def prune_masks(self, prune_fraction):
-    """Updates a fraction of weights in each layer."""
-    all_masks, all_vars = self.get_vars_and_masks()
-    scores = self.get_scores(all_vars, all_masks)
-    for mask, var, score in zip(all_masks, all_vars, scores):
-      self.generic_mask_update(mask, var, score, prune_fraction=prune_fraction)
-
-  def update_masks(self):
-    """Updates a fraction of weights in each layer."""
-    all_masks, all_vars = self.get_vars_and_masks()
-    scores = self.get_scores(all_vars, all_masks)
-    drop_fractions = {}
-    for mask, var, score in zip(all_masks, all_vars, scores):
-      drop_fractions[mask.name] = self.generic_mask_update(mask, var, score)
-    return drop_fractions
-
-  def get_scores(self, all_vars, all_masks):
-    """Gets unified scores for existing and non existing connections."""
-    grads = self._get_gradients(all_vars)
-    scores = []
-    for mask, var, grad in zip(all_masks, all_vars, grads):
-      # For active connections.
-      score = tf.math.abs(mask * var * grad)
-      # For masked connections.
-      current_lr = self._optimizer.lr(self._optimizer.iterations)
-      scaled_current_lr = current_lr * self._lrcoef
-      score += (1 - mask) * grad * grad * scaled_current_lr
-      scores.append(score)
-    return scores
-
-  def generic_mask_update(self, mask, var, score, prune_fraction=None):
-    """Prunes+grows connections, all tensors same shape."""
-    n_total = tf.size(score)
-    n_ones = tf.cast(tf.reduce_sum(mask), dtype=tf.int32)
-    if prune_fraction:
-      n_keep = int((1 - prune_fraction) * n_ones)
-    else:
-      n_keep = n_ones
-
-    # Sort the entire array since the k needs to be constant for TPU.
-    _, sorted_indices = tf.math.top_k(tf.reshape(score, [-1]), k=n_total)
-    sorted_indices_ex = tf.expand_dims(sorted_indices, 1)
-    # We will have zeros after having `n_ones` many ones.
-    new_values = tf.where(
-        tf.range(n_total) < n_keep,
-        tf.ones_like(sorted_indices, dtype=mask.dtype),
-        tf.zeros_like(sorted_indices, dtype=mask.dtype))
-    new_mask = tf.scatter_nd(sorted_indices_ex, new_values, new_values.shape)
-    new_n_ones = tf.cast(tf.reduce_sum(new_mask), dtype=tf.int32)
-    # Ensure n_connections are same.
-    tf.debugging.Assert(tf.math.equal(new_n_ones, n_ones), [new_n_ones, n_ones])
-    new_mask_reshaped = tf.reshape(new_mask, mask.shape)
-    n_kept = tf.cast(tf.reduce_sum(new_mask_reshaped * mask), dtype=tf.int32)
-    n_updated = n_ones - n_kept
-    drop_fraction = n_updated / n_total
-
-    grow_tensor = tf.zeros_like(var, dtype=var.dtype)
-    new_connections = tf.math.logical_and(
-        tf.math.equal(new_mask_reshaped, 1), tf.math.equal(mask, 0))
-    new_weights = tf.where(new_connections, grow_tensor, var)
-    var.assign(new_weights)
-    # Ensure there is no momentum value for new connections.
-    self.reset_momentum(var, new_connections)
-    mask.assign(new_mask_reshaped)
-    return drop_fraction
 
 
 class UpdateSchedule(object):
@@ -446,20 +318,6 @@ class ScaledLRUpdateSchedule(UpdateSchedule):
     return (self.init_drop_fraction / self._initial_lr) * current_lr
 
 
-class AutoUpdateSchedule(UpdateSchedule):
-  """Scales the drop fraction with learning rate."""
-
-  def __init__(self, mask_updater, update_freq, last_update_step):
-    super(AutoUpdateSchedule, self).__init__(mask_updater, None, update_freq,
-                                             last_update_step)
-
-  def update(self, step, check_update_iter=True):
-    if check_update_iter:
-      if not self.is_update_iter(step):
-        raise ValueError('Called .update() function during a non-update '
-                         'iteration. If this is intended set '
-                         'check_update_iter=False.')
-    return self._mask_updater.update_masks()
 
 
 @gin.configurable(
@@ -486,19 +344,9 @@ def get_mask_updater(model,
     mask_updater = RigL(model, optimizer, loss_fn=loss_fn)
   elif update_alg == 'rigl_inverted':
     mask_updater = RigLInverted(model, optimizer, loss_fn=loss_fn)
-  elif update_alg == 'rigl_s':
-    mask_updater = RigLSaliency(model, optimizer, loss_fn=loss_fn)
-  elif update_alg == 'rigl_grasp':
-    mask_updater = RigLGrasp(model, optimizer, loss_fn=loss_fn)
-  elif update_alg == 'riglauto':
-    mask_updater = RigLAuto(
-        model, optimizer, loss_fn=loss_fn, lrcoef=autorigl_lrcoef)
   else:
     raise ValueError('update_alg:%s  is not valid.' % update_alg)
-  if update_alg == 'riglauto':
-    update_schedule = AutoUpdateSchedule(mask_updater, update_freq,
-                                         last_update_step)
-  elif schedule_alg == 'lr':
+  if schedule_alg == 'lr':
     update_schedule = ScaledLRUpdateSchedule(
         mask_updater, init_drop_fraction, update_freq, last_update_step,
         optimizer)
@@ -510,5 +358,4 @@ def get_mask_updater(model,
                                              update_freq, last_update_step)
   else:
     raise ValueError('schedule_alg:%s  is not valid.' % schedule_alg)
-
   return update_schedule

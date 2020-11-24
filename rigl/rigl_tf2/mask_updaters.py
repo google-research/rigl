@@ -323,18 +323,21 @@ class ScaledLRUpdateSchedule(UpdateSchedule):
 @gin.configurable(
     'mask_updater',
     whitelist=[
-        'update_alg', 'schedule_alg', 'update_freq', 'init_drop_fraction',
-        'last_update_step', 'autorigl_lrcoef'
+        'update_alg',
+        'schedule_alg',
+        'update_freq',
+        'init_drop_fraction',
+        'last_update_step',
     ])
-def get_mask_updater(model,
-                     optimizer,
-                     loss_fn,
-                     update_alg='',
-                     schedule_alg='lr',
-                     update_freq=100,
-                     autorigl_lrcoef=1.,
-                     init_drop_fraction=0.3,
-                     last_update_step=-1):
+def get_mask_updater(
+    model,
+    optimizer,
+    loss_fn,
+    update_alg='',
+    schedule_alg='lr',
+    update_freq=100,
+    init_drop_fraction=0.3,
+    last_update_step=-1):
   """Retrieves the update algorithm and passes it to the schedule object."""
   if not update_alg:
     return None

@@ -67,7 +67,7 @@ class MaskUpdater(object):
     else:
       all_layers = [self._model]
     for layer in all_layers:
-      if isinstance(layer, utils.PRUNING_WRAPPER):
+      if isinstance(layer, utils.PRUNING_WRAPPER) and layer.trainable:
         for var, mask, _ in layer.pruning_vars:
           all_vars.append(var)
           all_masks.append(mask)

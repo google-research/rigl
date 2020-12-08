@@ -1,26 +1,5 @@
 # Weight Symmetry Research Code
-This code is mostly written by Yani Ioannou. 
-
-## Summary
-
-Due to the symmetry of most neural networks (NN), intra-layer neuron ordering is
-arbitrary, meaning that any minima of the loss function of a NN has many
-equivalent minima found simply by symmetric permutations of the weight vectors
-within each layer. Specifically for a deep neural network (DNN) with $$L$$
-layers and $$N$$ neurons per layer, there are $$N!^L$$ permutations of each
-unique minima, where each unique minima is defined by the unordered set of
-neurons in each layer. Putting this into context, a 6-layer fully-connected NN
-with 16 neurons/layer has $$8.39\times10^{79}$$ symmetries, close to the number
-of atoms in the observable universe ($$10^{80}$$).
-
-When such a NN is trained and subsequently pruned in an unstructured manner
-however, the sparse sub-network that remains lacks this symmetry, i.e. weight
-symmetry is broken, and is instead restricted to a subset of the symmetries of
-the original model — put simply it is lacking the vast majority of the original
-error surface's minima. This may explain why some pruned DNNs are much harder to
-train from scratch, and specifically why “lottery tickets”, i.e. an
-initialization associated with that specific subnetwork's symmetry, are
-necessary.
+This code is mostly written by Yani Ioannou.
 
 ## Experiment Summary
 

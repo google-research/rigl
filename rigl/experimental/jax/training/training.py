@@ -41,6 +41,89 @@ from rigl.experimental.jax.pruning import pruning
 from rigl.experimental.jax.pruning import symmetry
 from rigl.experimental.jax.utils import utils
 import tensorflow.compat.v2 as tf
+
+LABELKEY = dataset_base.ImageDataset.LABELKEY
+DATAKEY = dataset_base.ImageDataset.DATAKEY
+
+PruningRateFnType = Union[Mapping[str, Callable[[int], float]], Callable[[int],
+                                                                         float]]
+
+
+def _shard_batch(xs):
+  """Shards a batch for a pmap, based on the number of devices."""
+  local_device_count = jax.local_device_count()
+
+  def _prepare(x):
+    return x.reshape((local_device_count, -1) + x.shape[1:])
+
+  return jax.tree_map(_prepare, xs)
+
+
+def train_step(
+    optimizer: flax.optim.Optimizer, batch: Mapping[str, jnp.array],
+    rng: Callable[[int], jnp.array], state: flax.nn.Collection,
+    learning_rate_fn: Callable[[int], float]
+) -> Tuple[flax.optim.Optimizer, flax.nn.Collection, float, float]:
+  """Performs training for one minibatch.
+
+  Args:
+    optimizer: Optimizer to use.
+    batch: Minibatch to train with.
+    rng: Random number generator, i.e. jax.random.PRNGKey, to use for model
+      training, e.g. dropout.
+    state: Model state.
+    learning_rate_fn: A function that returns the learning rate given the step.
+
+  Returns:
+    A tuple consisting of the new optimizer, new state, mini-batch loss, and
+    gradient norm.
+  """
+
+  def loss_fn(
+      model: flax.nn.Model
+  ) -> Tuple[float, Tuple[flax.nn.Collection, jnp.array]]:
+    """Evaluates the loss function.
+
+    Args:
+      model: The model with which to evaluate the loss.
+
+    Returns:
+      Tuple of the loss for the mini-batch, and model state.
+    """
+    with flax.nn.stateful(state) as new_state:
+      with flax.nn.stochastic(rng):
+        logits = model(batch[DATAKEY])
+    loss = utils.cross_entropy_loss(logits, batch[LABELKEY])
+    return loss, new_state
+
+  lr = learning_rate_fn(optimizer.state.step)
+  grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+  (loss, new_state), grad = grad_fn(optimizer.target)
+  grad = jax.lax.pmean(grad, 'batch')
+
+  new_opt = optimizer.apply_gradient(grad, learning_rate=lr)
+
+  grad_norm = jnp.linalg.norm(utils.param_as_array(grad))
+
+  return new_opt, new_state, loss, grad_norm
+
+
+class Trainer:
+  """Training class with the state and methods for training a neural network.
+
+  Attributes:
+    optimizer: Optimizer used for training, None if training hasn't begun.
+    state: Model state used for training.
+  """
+
+  def __init__(
+      self,
+      optimizer_def: flax.optim.OptimizerDef,
+      initial_model: flax.nn.Model,
+      initial_state: flax.nn.Collection,
+      dataset: jnp.array,
+      rng: Callable[[int], jnp.array] = None,
+      summary_writer: Optional[tf.summary.SummaryWriter] = None,
   ):
     """Creates a Trainer object.
 

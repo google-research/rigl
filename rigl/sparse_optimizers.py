@@ -554,7 +554,8 @@ class SparseMomentumOptimizer(SparseSETOptimizer):
   def generic_mask_update(self, mask, weights, noise_std=1e-5):
     """True branch of the condition, updates the mask."""
     # Ensure that the weights are masked.
-    masked_weights = mask * weights
+    casted_mask = math_ops.cast(mask, dtypes.float32)
+    masked_weights = casted_mask * weights
     score_drop = math_ops.abs(masked_weights)
     # Add noise for slight bit of randomness.
     score_drop += self._random_normal(

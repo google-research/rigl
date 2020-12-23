@@ -152,6 +152,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD/tpu/models/
 
 ## Other Implementations
 - [Graphcore-TF-MNIST](https://github.com/graphcore/examples/tree/master/applications/tensorflow/dynamic_sparsity/mnist_rigl): with sparse matrix ops!
+- [Pytorch implementation](https://github.com/McCrearyD/rigl-torch) by Dyllan McCreary.
 - [Micrograd-Pure Python](https://evcu.github.io/ml/sparse-micrograd/): This is
 a toy example with pure python sparse implementation. Caution, very slow but fun.
 

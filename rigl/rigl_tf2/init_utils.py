@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2020 RigL Authors.
+# Copyright 2021 RigL Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import gin
 import tensorflow as tf
 
 
-@gin.configurable(blacklist=['mask'])
+@gin.configurable(denylist=['mask'])
 def unit_scaled_init(mask, method='fanavg_uniform', scale=1.0):
   """Scales the variance of each unit with correct fan_in."""
   mode, distribution = method.strip().split('_')
@@ -67,7 +67,7 @@ def unit_scaled_init(mask, method='fanavg_uniform', scale=1.0):
   return new_weights
 
 
-@gin.configurable(blacklist=['mask'])
+@gin.configurable(denylist=['mask'])
 def layer_scaled_init(mask, method='fanavg_uniform', scale=1.0):
   """Scales the variance of each unit with correct fan_in."""
   mode, distribution = method.strip().split('_')

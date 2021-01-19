@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2020 RigL Authors.
+# Copyright 2021 RigL Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -179,7 +179,7 @@ def get_network(
   return model
 
 
-@gin.configurable('optimizer', blacklist=['total_steps'])
+@gin.configurable('optimizer', denylist=['total_steps'])
 def get_optimizer(total_steps,
                   name = 'adam',
                   learning_rate = 0.001,

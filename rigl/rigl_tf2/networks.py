@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2020 RigL Authors.
+# Copyright 2021 RigL Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import gin
 import tensorflow.compat.v2 as tf
 
 
-@gin.configurable(whitelist=['hidden_sizes', 'use_batch_norm'])
+@gin.configurable(allowlist=['hidden_sizes', 'use_batch_norm'])
 def lenet5(input_shape,
            num_classes,
            activation,
@@ -55,7 +55,7 @@ def lenet5(input_shape,
   return network
 
 
-@gin.configurable(whitelist=['hidden_sizes', 'use_batch_norm'])
+@gin.configurable(allowlist=['hidden_sizes', 'use_batch_norm'])
 def mlp(input_shape,
         num_classes,
         activation,

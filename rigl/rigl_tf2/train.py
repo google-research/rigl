@@ -245,7 +245,7 @@ def mask_gradients(model, gradients, variables):
 
 
 @gin.configurable(
-    'training', blacklist=['model', 'ds_train', 'ds_test', 'logdir'])
+    'training', denylist=['model', 'ds_train', 'ds_test', 'logdir'])
 def train_model(model,
                 ds_train,
                 ds_test,

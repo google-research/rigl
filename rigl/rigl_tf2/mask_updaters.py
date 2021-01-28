@@ -322,7 +322,7 @@ class ScaledLRUpdateSchedule(UpdateSchedule):
 
 @gin.configurable(
     'mask_updater',
-    whitelist=[
+    allowlist=[
         'update_alg',
         'schedule_alg',
         'update_freq',

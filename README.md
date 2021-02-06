@@ -5,6 +5,8 @@
 
 **15min Presentation** [[pml4dc](https://pml4dc.github.io/iclr2020/program/pml4dc_7.html)] [[icml](https://icml.cc/virtual/2020/paper/5808)]
 
+**ML Reproducibility Challenge 2020** [report](https://openreview.net/forum?id=riCIeP6LzEE)
+
 ## Colabs for Calculating FLOPs of Sparse Models
 [MobileNet-v1](https://github.com/google-research/rigl/blob/master/rigl/imagenet_resnet/colabs/MobileNet_Counting.ipynb)
 

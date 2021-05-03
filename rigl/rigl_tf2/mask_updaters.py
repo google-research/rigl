@@ -171,7 +171,8 @@ class MaskUpdater(object):
     with tf.GradientTape() as tape:
       batch_loss = self._loss_fn(self.val_x, self.val_y)
     grads = tape.gradient(batch_loss, all_vars)
-    grads = tf.distribute.get_replica_context().all_reduce('sum', grads)
+    if grads:
+      grads = tf.distribute.get_replica_context().all_reduce('sum', grads)
     return grads
 
 
@@ -255,7 +256,8 @@ class UpdateSchedule(object):
     """Returns true if it is a valid mask update step."""
     # last_update_step < 0 means, there is no last step.
     # last_update_step = 0 means, never update.
-    assert step >= 0
+    tf.debugging.Assert(step >= 0, [step])
+
     if self.last_update_step < 0:
       is_valid_step = True
     elif self.last_update_step == 0:
@@ -267,7 +269,7 @@ class UpdateSchedule(object):
 
   def update(self, step, check_update_iter=True):
     if check_update_iter:
-      assert self.is_update_iter(step)
+      tf.debugging.Assert(self.is_update_iter(step), [step])
     self.last_drop_fraction = self.get_drop_fraction(step)
     self._mask_updater.update_masks(self.last_drop_fraction)
 
@@ -292,8 +294,10 @@ class CosineUpdateSchedule(UpdateSchedule):
   def get_drop_fraction(self, step):
     # TODO Implement self.last_drop_fraction
     drop_frac = tf.compat.v1.train.cosine_decay(
-        self.init_drop_fraction, step, self.last_update_step,
-        name='cosine_drop_fraction')()
+        self.init_drop_fraction,
+        step,
+        self.last_update_step,
+        name='cosine_drop_fraction')
     return drop_frac
 
 

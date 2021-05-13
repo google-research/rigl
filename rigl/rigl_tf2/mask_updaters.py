@@ -265,7 +265,7 @@ class UpdateSchedule(object):
     else:
       is_valid_step = step <= self.last_update_step
 
-    return is_valid_step and (step % self.update_freq == 0)
+    return tf.logical_and(is_valid_step, step % self.update_freq == 0)
 
   def update(self, step, check_update_iter=True):
     if check_update_iter:
@@ -291,14 +291,16 @@ class ConstantUpdateSchedule(UpdateSchedule):
 class CosineUpdateSchedule(UpdateSchedule):
   """Updates a constant fraction of connections."""
 
-  def get_drop_fraction(self, step):
-    # TODO Implement self.last_drop_fraction
-    drop_frac = tf.compat.v1.train.cosine_decay(
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self._drop_fraction_fn = tf.keras.experimental.CosineDecay(
         self.init_drop_fraction,
-        step,
         self.last_update_step,
+        alpha=0.0,
         name='cosine_drop_fraction')
-    return drop_frac
+
+  def get_drop_fraction(self, step):
+    return self._drop_fraction_fn(step)
 
 
 class ScaledLRUpdateSchedule(UpdateSchedule):

@@ -19,6 +19,21 @@ from rigl.rigl_tf2 import utils
 import tensorflow as tf
 
 
+def get_all_layers(model, filter_fn=lambda _: True):
+  """Gets all layers of a model and layers of a layer if it is a keras.Model."""
+  all_layers = []
+  for l in model.layers:
+    if hasattr(l, 'layers'):
+      all_layers.extend(get_all_layers(l, filter_fn=filter_fn))
+    elif filter_fn(l):
+      all_layers.append(l)
+  return all_layers
+
+
+def is_pruned(layer):
+  return isinstance(layer, utils.PRUNING_WRAPPER) and layer.trainable
+
+
 class MaskUpdater(object):
   """Base class for mask update algorithms.
 
@@ -58,19 +73,21 @@ class MaskUpdater(object):
                                                  drop_scores, grow_scores):
       self.generic_mask_update(mask, var, drop_score, grow_score, drop_fraction)
 
+  def get_all_pruning_layers(self):
+    """Returns all pruned layers from the model."""
+    if hasattr(self._model, 'layers'):
+      return get_all_layers(self._model, filter_fn=is_pruned)
+    else:
+      return [self._model] if is_pruned(self._model) else []
+
   def get_vars_and_masks(self):
     """Gets all masked variables and corresponding masks."""
     all_masks = []
     all_vars = []
-    if hasattr(self._model, 'layers'):
-      all_layers = self._model.layers
-    else:
-      all_layers = [self._model]
-    for layer in all_layers:
-      if isinstance(layer, utils.PRUNING_WRAPPER) and layer.trainable:
-        for var, mask, _ in layer.pruning_vars:
-          all_vars.append(var)
-          all_masks.append(mask)
+    for layer in self.get_all_pruning_layers():
+      for var, mask, _ in layer.pruning_vars:
+        all_vars.append(var)
+        all_masks.append(mask)
     return all_masks, all_vars
 
   def get_drop_scores(self, all_vars, all_masks):

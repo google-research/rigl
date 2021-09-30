@@ -132,8 +132,7 @@ class MaskUpdater(object):
           tf.zeros_like(sorted_indices, dtype=mask.dtype))
       mask2 = tf.scatter_nd(sorted_indices_ex, new_values, new_values.shape)
       # Ensure masks are disjoint.
-      tf.debugging.Assert(
-          tf.math.equal(tf.reduce_sum(mask1 * mask2), 0.), [mask1, mask2])
+      tf.debugging.assert_near(tf.reduce_sum(mask1 * mask2), 0.)
 
       # Let's set the weights of the growed connections.
       mask2_reshaped = tf.reshape(mask2, mask.shape)

@@ -72,11 +72,9 @@ def sparse_init(
       init = base_init(split_rngs[i], sparse_shape, dtype)[Ellipsis, 0]
 
       # Expand out to full sparse array.
-      expanded_init = jax.ops.index_update(
-          jnp.zeros(mask[Ellipsis, i].shape, dtype).flatten(),
-          jax.ops.index[jnp.where(mask[Ellipsis, i].flatten() == 1)],
-          init
-      )
+      expanded_init = jnp.zeros(
+          mask[Ellipsis, i].shape,
+          dtype).flatten().at[jnp.where(mask[Ellipsis, i].flatten() == 1)].set(init)
       expanded_init = jnp.reshape(expanded_init, mask[Ellipsis, i].shape)
       init_cols.append(expanded_init[Ellipsis, jnp.newaxis])
 

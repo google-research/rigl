@@ -51,7 +51,7 @@ class Dataset(metaclass=abc.ABCMeta):
                batch_size_test,
                shuffle_buffer_size,
                prefetch_size = 1,
-               seed = None):
+               seed = None):  # pytype: disable=annotation-type-mismatch
     """Base class for datasets.
 
     Args:

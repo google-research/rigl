@@ -493,7 +493,7 @@ def _fill_diagonal_wrap(shape,
     # i.e. start at 0, and look at each n+1 elements, end when you get to end
     # of array. We need to look at vertically-offset diagonals as well, which is
     # handled by offset.
-    return jax.ops.index[cols * offset:cols * (offset + cols):cols + 1]
+    return jnp.index_exp[cols * offset:cols * (offset + cols):cols + 1]
 
   # Fills (square) matrix diagonals with the given value, tiling over tall
   # rectangular arrays by offsetting the filled diagonals by multiples of the

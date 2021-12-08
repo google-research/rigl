@@ -67,6 +67,17 @@ better results.
 | ERK             | 0.9       | 0.24x          | 0.24x           | 13.499                              | 73.07     | [link](https://storage.googleapis.com/rigl/s90erk1x.tar.gz) |
 | Uniform         | 0.9       | 0.13x          | 0.13x           | 13.532                              | 72.02     | [link](https://storage.googleapis.com/rigl/s90uniform1x.tar.gz) |
 
+### Results w/o label smoothing
+
+| S. Distribution |  Sparsity | Training FLOPs | Inference FLOPs | Model Size (Bytes) | Top-1 Acc | Ckpt         |
+|-----------------|-----------|----------------|-----------------|-------------------------------------|-----------|--------------|
+| ERK             | 0.8       | 0.42x          | 0.42x           | 23.683                              | 75.02     | [link](https://storage.googleapis.com/rigl/S80erk_nolabelsmooth_1x.tar.gz) |
+| ERK             | 0.8       | 2.09x          | 0.42x           | 23.683                              | 76.17     | [link](https://storage.googleapis.com/rigl/S80erk_nolabelsmooth_5x.tar.gz) |
+| ERK             | 0.9       | 0.24x          | 0.24x           | 13.499                              | 73.4     | [link](https://storage.googleapis.com/rigl/S90erk_nolabelsmooth_1x.tar.gz) |
+| ERK             | 0.9       | 1.23x          | 0.24x           | 13.499                              | 75.9     | [link](https://storage.googleapis.com/rigl/S90erk_nolabelsmooth_5x.tar.gz) |
+| ERK             | 0.95      | 0.13x          | 0.12x           | 8.399                              | 70.39     | [link](https://storage.googleapis.com/rigl/S95erk_nolabelsmooth_1x.tar.gz) |
+| ERK             | 0.95      | 0.63x          | 0.12x           | 8.399                              | 74.36    | [link](https://storage.googleapis.com/rigl/S95erk_nolabelsmooth_5x.tar.gz) |
+
 ### Evaluating checkpoints
 Download the checkpoints and run the evaluation on ERK checkpoints with the
 following:

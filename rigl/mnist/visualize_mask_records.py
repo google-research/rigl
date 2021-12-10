@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2021 RigL Authors.
+# Copyright 2022 RigL Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
 
 from __future__ import absolute_import
 from __future__ import division
-
 from __future__ import print_function
 
 from absl import flags

@@ -350,6 +350,7 @@ class ScaledLRUpdateSchedule(UpdateSchedule):
         'update_freq',
         'init_drop_fraction',
         'last_update_step',
+        'use_stateless',
     ])
 def get_mask_updater(
     model,
@@ -359,16 +360,19 @@ def get_mask_updater(
     schedule_alg='lr',
     update_freq=100,
     init_drop_fraction=0.3,
-    last_update_step=-1):
+    last_update_step=-1,
+    use_stateless=True):
   """Retrieves the update algorithm and passes it to the schedule object."""
   if not update_alg:
     return None
   elif update_alg == 'set':
-    mask_updater = SET(model, optimizer)
+    mask_updater = SET(model, optimizer, use_stateless=use_stateless)
   elif update_alg == 'rigl':
-    mask_updater = RigL(model, optimizer, loss_fn=loss_fn)
+    mask_updater = RigL(
+        model, optimizer, loss_fn=loss_fn, use_stateless=use_stateless)
   elif update_alg == 'rigl_inverted':
-    mask_updater = RigLInverted(model, optimizer, loss_fn=loss_fn)
+    mask_updater = RigLInverted(
+        model, optimizer, loss_fn=loss_fn, use_stateless=use_stateless)
   else:
     raise ValueError('update_alg:%s  is not valid.' % update_alg)
   if schedule_alg == 'lr':

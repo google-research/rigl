@@ -272,6 +272,8 @@ def train_model(model,
 
   # We use a separate set than the one we are using in our training.
   def loss_fn(x, y):
+    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
     predictions = model(x, training=True)
     reg_loss = tf.add_n(model.losses) if model.losses else 0
     return loss_object(y, predictions) + reg_loss

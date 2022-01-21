@@ -287,7 +287,11 @@ class UpdateSchedule(object):
     if check_update_iter:
       tf.debugging.Assert(self.is_update_iter(step), [step])
     self.last_drop_fraction = self.get_drop_fraction(step)
-    self._mask_updater.update_masks(self.last_drop_fraction)
+
+    def true_fn():
+      self._mask_updater.update_masks(self.last_drop_fraction)
+
+    tf.cond(self.last_drop_fraction > 0., true_fn, lambda: None)
 
   def prune(self, prune_fraction):
     self.last_drop_fraction = prune_fraction

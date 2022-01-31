@@ -45,10 +45,10 @@ class ModelCommonTest(parameterized.TestCase):
     model, state = self._create_model(model_name)
 
     with self.subTest(name='test_model_supported_model_instance'):
-      self.assertIsInstance(model, flax.nn.Model)
+      self.assertIsInstance(model, flax.deprecated.nn.Model)
 
     with self.subTest(name='test_model_supported_collection_instance'):
-      self.assertIsInstance(state, flax.nn.Collection)
+      self.assertIsInstance(state, flax.deprecated.nn.Collection)
 
   def test_model_unsupported(self):
     """Tests unsupported models."""

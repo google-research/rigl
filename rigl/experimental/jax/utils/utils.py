@@ -98,7 +98,8 @@ def dump_dict_json(data_dict, path):
     json.dump(data_dict, json_file, default=_np_converter)
 
 
-def count_param(model, param_names):
+def count_param(model,
+                param_names):
   """Counts the number of parameters in the given model.
 
   Args:

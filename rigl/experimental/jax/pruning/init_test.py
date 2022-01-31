@@ -26,7 +26,7 @@ from rigl.experimental.jax.pruning import init
 from rigl.experimental.jax.pruning import masked
 
 
-class MaskedDense(flax.nn.Module):
+class MaskedDense(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -40,12 +40,12 @@ class MaskedDense(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=layer_mask,
-        kernel_init=flax.nn.initializers.kaiming_normal())
+        kernel_init=flax.deprecated.nn.initializers.kaiming_normal())
 
 
-class MaskedDenseSparseInit(flax.nn.Module):
+class MaskedDenseSparseInit(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -61,14 +61,14 @@ class MaskedDenseSparseInit(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=layer_mask,
         kernel_init=init.kaiming_sparse_normal(
             layer_mask['kernel'] if layer_mask is not None else None),
         **kwargs)
 
 
-class MaskedCNN(flax.nn.Module):
+class MaskedCNN(flax.deprecated.nn.Module):
   """Single-layer CNN Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -81,13 +81,13 @@ class MaskedCNN(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         kernel_size=(3, 3),
         mask=layer_mask,
-        kernel_init=flax.nn.initializers.kaiming_normal())
+        kernel_init=flax.deprecated.nn.initializers.kaiming_normal())
 
 
-class MaskedCNNSparseInit(flax.nn.Module):
+class MaskedCNNSparseInit(flax.deprecated.nn.Module):
   """Single-layer CNN Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -102,7 +102,7 @@ class MaskedCNNSparseInit(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         kernel_size=(3, 3),
         mask=layer_mask,
         kernel_init=init.kaiming_sparse_normal(
@@ -124,9 +124,8 @@ class InitTest(absltest.TestCase):
     input_array = jnp.ones((64, 16), jnp.float32)
     mask = jax.random.bernoulli(self._rng, shape=(64, 16))
 
-    base_init = flax.nn.initializers.kaiming_normal()(self._rng,
-                                                      input_array.shape,
-                                                      input_array.dtype)
+    base_init = flax.deprecated.nn.initializers.kaiming_normal()(
+        self._rng, input_array.shape, input_array.dtype)
     sparse_init = init.kaiming_sparse_normal(mask)(self._rng, input_array.shape,
                                                    input_array.dtype)
 
@@ -143,12 +142,12 @@ class InitTest(absltest.TestCase):
     """Checks that in the special case of no mask, init is same as base_init."""
     _, initial_params = MaskedDense.init_by_shape(self._rng,
                                                   (self._input_shape,))
-    self._unmasked_model = flax.nn.Model(MaskedDense, initial_params)
+    self._unmasked_model = flax.deprecated.nn.Model(MaskedDense, initial_params)
 
     _, initial_params = MaskedDenseSparseInit.init_by_shape(
         jax.random.PRNGKey(42), (self._input_shape,), mask=None)
-    self._masked_model_sparse_init = flax.nn.Model(MaskedDenseSparseInit,
-                                                   initial_params)
+    self._masked_model_sparse_init = flax.deprecated.nn.Model(
+        MaskedDenseSparseInit, initial_params)
 
     self.assertTrue(
         jnp.isclose(
@@ -160,15 +159,15 @@ class InitTest(absltest.TestCase):
     """Checks kaiming normal sparse initialization for dense layer."""
     _, initial_params = MaskedDense.init_by_shape(self._rng,
                                                   (self._input_shape,))
-    self._unmasked_model = flax.nn.Model(MaskedDense, initial_params)
+    self._unmasked_model = flax.deprecated.nn.Model(MaskedDense, initial_params)
 
     mask = masked.simple_mask(self._unmasked_model, jnp.ones,
                               masked.WEIGHT_PARAM_NAMES)
 
     _, initial_params = MaskedDenseSparseInit.init_by_shape(
         jax.random.PRNGKey(42), (self._input_shape,), mask=mask)
-    self._masked_model_sparse_init = flax.nn.Model(MaskedDenseSparseInit,
-                                                   initial_params)
+    self._masked_model_sparse_init = flax.deprecated.nn.Model(
+        MaskedDenseSparseInit, initial_params)
 
     mean_init = jnp.mean(
         self._unmasked_model.params['MaskedModule_0']['unmasked']['kernel'])
@@ -195,15 +194,15 @@ class InitTest(absltest.TestCase):
   def test_cnn_sparse_init_kaiming(self):
     """Checks kaiming normal sparse initialization for convolutional layer."""
     _, initial_params = MaskedCNN.init_by_shape(self._rng, (self._input_shape,))
-    self._unmasked_model = flax.nn.Model(MaskedCNN, initial_params)
+    self._unmasked_model = flax.deprecated.nn.Model(MaskedCNN, initial_params)
 
     mask = masked.simple_mask(self._unmasked_model, jnp.ones,
                               masked.WEIGHT_PARAM_NAMES)
 
     _, initial_params = MaskedCNNSparseInit.init_by_shape(
         jax.random.PRNGKey(42), (self._input_shape,), mask=mask)
-    self._masked_model_sparse_init = flax.nn.Model(MaskedCNNSparseInit,
-                                                   initial_params)
+    self._masked_model_sparse_init = flax.deprecated.nn.Model(
+        MaskedCNNSparseInit, initial_params)
 
     mean_init = jnp.mean(
         self._unmasked_model.params['MaskedModule_0']['unmasked']['kernel'])

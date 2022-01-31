@@ -84,6 +84,6 @@ def sparse_init(
 
 
 xavier_sparse_normal = glorot_sparse_normal = functools.partial(
-    sparse_init, flax.nn.initializers.xavier_normal())
+    sparse_init, flax.deprecated.nn.initializers.xavier_normal())
 kaiming_sparse_normal = he_sparse_normal = functools.partial(
-    sparse_init, flax.nn.initializers.kaiming_normal())
+    sparse_init, flax.deprecated.nn.initializers.kaiming_normal())

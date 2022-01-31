@@ -29,8 +29,9 @@ from rigl.experimental.jax.pruning import masked
 
 # A function to create a mask, takes as arguments: a flax model, JAX PRNG Key,
 # sparsity level as a float in [0, 1].
-MaskFnType = Callable[[flax.nn.Model, Callable[[int], jnp.array], float],
-                      masked.MaskType]
+MaskFnType = Callable[
+    [flax.deprecated.nn.Model, Callable[[int],
+                                        jnp.array], float], masked.MaskType]
 
 MASK_TYPES: Mapping[str, MaskFnType] = {
     'random':

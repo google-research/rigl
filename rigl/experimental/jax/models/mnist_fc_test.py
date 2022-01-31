@@ -44,12 +44,12 @@ class MNISTFCTest(parameterized.TestCase):
 
   def test_output_shapes(self):
     """Tests the output shape from the model."""
-    with flax.nn.stateful() as initial_state:
+    with flax.deprecated.nn.stateful() as initial_state:
       _, initial_params = mnist_fc.MNISTFC.init_by_shape(
           self._rng, (self._input_shape,), num_classes=self._num_classes)
-      model = flax.nn.Model(mnist_fc.MNISTFC, initial_params)
+      model = flax.deprecated.nn.Model(mnist_fc.MNISTFC, initial_params)
 
-    with flax.nn.stateful(initial_state, mutable=False):
+    with flax.deprecated.nn.stateful(initial_state, mutable=False):
       logits = model(self._input, num_classes=self._num_classes, train=False)
 
     self.assertTupleEqual(logits.shape, (self._batch_size, self._num_classes))
@@ -78,7 +78,7 @@ class MNISTFCTest(parameterized.TestCase):
         (self._input_shape,),
         num_classes=self._num_classes,
         features=features)
-    return flax.nn.Model(mnist_fc.MNISTFC, initial_params)
+    return flax.deprecated.nn.Model(mnist_fc.MNISTFC, initial_params)
 
   @parameterized.parameters(*range(1, 6))
   def test_feature_dim_for_param_depth(self, depth):

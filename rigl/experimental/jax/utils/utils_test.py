@@ -32,7 +32,7 @@ from rigl.experimental.jax.training import training
 from rigl.experimental.jax.utils import utils
 
 
-class TwoLayerDense(flax.nn.Module):
+class TwoLayerDense(flax.deprecated.nn.Module):
   """Two-layer Dense Network."""
 
   NUM_FEATURES: Sequence[int] = (32, 64)
@@ -41,8 +41,8 @@ class TwoLayerDense(flax.nn.Module):
     # If inputs are in image dimensions, flatten image.
     inputs = inputs.reshape(inputs.shape[0], -1)
 
-    inputs = flax.nn.Dense(inputs, features=self.NUM_FEATURES[0])
-    return flax.nn.Dense(inputs, features=self.NUM_FEATURES[1])
+    inputs = flax.deprecated.nn.Dense(inputs, features=self.NUM_FEATURES[0])
+    return flax.deprecated.nn.Dense(inputs, features=self.NUM_FEATURES[1])
 
 
 class UtilsTest(parameterized.TestCase):
@@ -60,10 +60,11 @@ class UtilsTest(parameterized.TestCase):
     self._rng = jax.random.PRNGKey(42)
     _, initial_params = TwoLayerDense.init_by_shape(self._rng,
                                                     (self._input_shape,))
-    self._model = flax.nn.Model(TwoLayerDense, initial_params)
+    self._model = flax.deprecated.nn.Model(TwoLayerDense, initial_params)
     _, initial_params = TwoLayerDense.init_by_shape(self._rng,
                                                     (self._input_shape,))
-    self._model_diff_init = flax.nn.Model(TwoLayerDense, initial_params)
+    self._model_diff_init = flax.deprecated.nn.Model(TwoLayerDense,
+                                                     initial_params)
 
   def _create_logits_labels(self, correct):
     """Creates a set of logits/labels resulting from correct classification.

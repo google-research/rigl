@@ -79,7 +79,7 @@ def feature_dim_for_param(input_len,
   return tuple(int(int(initial_width) * depth_mult**i) for i in range(depth))
 
 
-class MNISTFC(flax.nn.Module):
+class MNISTFC(flax.deprecated.nn.Module):
   """MNIST Fully-Connected Neural Network."""
 
   def apply(self,
@@ -87,8 +87,8 @@ class MNISTFC(flax.nn.Module):
             num_classes,
             features = (32, 32),
             train=True,
-            init_fn = flax.nn.initializers.kaiming_normal,
-            activation_fn = flax.nn.relu,
+            init_fn = flax.deprecated.nn.initializers.kaiming_normal,
+            activation_fn = flax.deprecated.nn.relu,
             masks = None,
             masked_layer_indices = None,
             dropout_rate = 0.):
@@ -111,7 +111,7 @@ class MNISTFC(flax.nn.Module):
     Returns:
       A tensor of shape (batch, num_classes), containing the logit output.
     """
-    batch_norm = flax.nn.BatchNorm.partial(
+    batch_norm = flax.deprecated.nn.BatchNorm.partial(
         use_running_average=not train, momentum=0.99, epsilon=1e-5)
 
     depth = 1 + len(features)
@@ -125,22 +125,23 @@ class MNISTFC(flax.nn.Module):
       if f'MaskedModule_{i}' in masks:
         logging.info('Layer %d is masked in model', i)
         mask = masks[f'MaskedModule_{i}']
-        inputs = masked.masked(flax.nn.Dense, mask)(
+        inputs = masked.masked(flax.deprecated.nn.Dense, mask)(
             inputs,
             features=feature_num,
             kernel_init=init.sparse_init(
                 init_fn(), mask['kernel'] if mask is not None else None))
       else:
-        inputs = flax.nn.Dense(
+        inputs = flax.deprecated.nn.Dense(
             inputs, features=feature_num, kernel_init=init_fn())
       inputs = batch_norm(inputs, name=f'bn_conv_{i}')
       inputs = activation_fn(inputs)
       if dropout_rate > 0.0:
-        inputs = flax.nn.dropout(inputs, dropout_rate, deterministic=not train)
+        inputs = flax.deprecated.nn.dropout(
+            inputs, dropout_rate, deterministic=not train)
 
-    inputs = flax.nn.Dense(
+    inputs = flax.deprecated.nn.Dense(
         inputs,
         features=num_classes,
-        kernel_init=flax.nn.initializers.xavier_normal())
+        kernel_init=flax.deprecated.nn.initializers.xavier_normal())
 
-    return flax.nn.log_softmax(inputs)
+    return flax.deprecated.nn.log_softmax(inputs)

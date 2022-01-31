@@ -53,7 +53,7 @@ MutableMaskLayerType = MutableMapping[str, Optional[jnp.array]]
 MutableMaskType = MutableMapping[str, MutableMaskLayerType]
 
 
-class MaskedModule(flax.nn.Module):
+class MaskedModule(flax.deprecated.nn.Module):
   """Generic FLAX Masking Module.
 
      Masks a FLAX module, given a mask for params of each layer.
@@ -165,7 +165,8 @@ def _filter_param(param_names,
     invert: Inverts filter to exclude, rather than include, given parameters.
 
   Returns:
-    A function to use with flax.nn.optim.ModelParamTraversal for filtering.
+    A function to use with flax.deprecated.nn.optim.ModelParamTraversal for
+    filtering.
   """
 
   def filter_fn(path, value):
@@ -179,7 +180,8 @@ def _filter_param(param_names,
   return filter_fn
 
 
-def mask_map(model, fn):
+def mask_map(model,
+             fn):
   """Convenience function to create a mask for a model.
 
   Args:
@@ -322,7 +324,8 @@ def random_mask(model,
   return mask_map(model, create_random_mask)
 
 
-def simple_mask(model, init_fn,
+def simple_mask(model,
+                init_fn,
                 masked_param):
   """Creates a mask given a model and numpy initialization function.
 
@@ -413,7 +416,8 @@ class _PerNeuronShuffle:
     return mask.reshape(param.shape)
 
 
-def shuffled_neuron_mask(model, rng,
+def shuffled_neuron_mask(model,
+                         rng,
                          sparsity):
   """Returns a shuffled mask with a given fixed sparsity for all neurons/layers.
 

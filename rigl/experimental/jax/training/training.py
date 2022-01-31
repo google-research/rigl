@@ -61,9 +61,9 @@ def _shard_batch(xs):
 
 def train_step(
     optimizer: flax.optim.Optimizer, batch: Mapping[str, jnp.array],
-    rng: Callable[[int], jnp.array], state: flax.nn.Collection,
+    rng: Callable[[int], jnp.array], state: flax.deprecated.nn.Collection,
     learning_rate_fn: Callable[[int], float]
-) -> Tuple[flax.optim.Optimizer, flax.nn.Collection, float, float]:
+) -> Tuple[flax.optim.Optimizer, flax.deprecated.nn.Collection, float, float]:
   """Performs training for one minibatch.
 
   Args:
@@ -80,8 +80,8 @@ def train_step(
   """
 
   def loss_fn(
-      model: flax.nn.Model
-  ) -> Tuple[float, Tuple[flax.nn.Collection, jnp.array]]:
+      model: flax.deprecated.nn.Model
+  ) -> Tuple[float, Tuple[flax.deprecated.nn.Collection, jnp.array]]:
     """Evaluates the loss function.
 
     Args:
@@ -90,8 +90,8 @@ def train_step(
     Returns:
       Tuple of the loss for the mini-batch, and model state.
     """
-    with flax.nn.stateful(state) as new_state:
-      with flax.nn.stochastic(rng):
+    with flax.deprecated.nn.stateful(state) as new_state:
+      with flax.deprecated.nn.stochastic(rng):
         logits = model(batch[DATAKEY])
     loss = utils.cross_entropy_loss(logits, batch[LABELKEY])
     return loss, new_state
@@ -119,8 +119,8 @@ class Trainer:
   def __init__(
       self,
       optimizer_def: flax.optim.OptimizerDef,
-      initial_model: flax.nn.Model,
-      initial_state: flax.nn.Collection,
+      initial_model: flax.deprecated.nn.Model,
+      initial_state: flax.deprecated.nn.Collection,
       dataset: jnp.array,
       rng: Callable[[int], jnp.array] = None,
       summary_writer: Optional[tf.summary.SummaryWriter] = None,
@@ -141,7 +141,7 @@ class Trainer:
     if self._rng is None:
       self._rng = jax.random.PRNGKey(42)
 
-  def _update_optimizer(self, model: flax.nn.Model):
+  def _update_optimizer(self, model: flax.deprecated.nn.Model):
     """Updates the optimizer based on the given model."""
     self.optimizer = jax_utils.replicate(
         self._optimizer_def.create(model))
@@ -153,8 +153,8 @@ class Trainer:
       pruning_rate_fn: Optional[PruningRateFnType] = None,
       update_iter: int = 100,
       update_epoch: int = 10
-  ) -> Tuple[flax.nn.Model, Mapping[str, Union[int, float, Mapping[str,
-                                                                   float]]]]:
+  ) -> Tuple[flax.deprecated.nn.Model, Mapping[str, Union[int, float, Mapping[
+      str, float]]]]:
     """Trains the model over the given number of epochs.
 
     Args:
@@ -441,34 +441,36 @@ class Trainer:
     return (best_model, best_test_metrics)
 
 
-def _eval_step(model: flax.nn.Model, state: flax.nn.Collection,
+def _eval_step(model: flax.deprecated.nn.Model,
+               state: flax.deprecated.nn.Collection,
                batch: Mapping[str, jnp.array]) -> Dict[str, jnp.array]:
   """Evaluates a mini-batch of data.
 
   Args:
     model: The model to use to evaluate.
-    state: Model state containing state for stateful flax.nn functions, such as
-      batch normalization.
+    state: Model state containing state for stateful flax.deprecated.nn
+      functions, such as batch normalization.
     batch: Mini-batch of data to evaluate on.
 
   Returns:
     Dictionary consisting of the mini-batch the loss and accuracy.
   """
   state = jax.lax.pmean(state, 'batch')
-  with flax.nn.stateful(state, mutable=False):
+  with flax.deprecated.nn.stateful(state, mutable=False):
     logits = model(batch[DATAKEY], train=False)
   metrics = utils.compute_metrics(logits, batch[LABELKEY])
   return metrics
 
 
-def eval_model(model: flax.nn.Model, state: flax.nn.Collection,
+def eval_model(model: flax.deprecated.nn.Model,
+               state: flax.deprecated.nn.Collection,
                eval_dataset: jnp.array) -> Dict[str, float]:
   """Evaluates the given model using the given dataset.
 
   Args:
     model: The model the evaluate.
-    state: Model state containing state for stateful flax.nn functions, such as
-      batch normalization.
+    state: Model state containing state for stateful flax.deprecated.nn
+      functions, such as batch normalization.
     eval_dataset: Dataset to evaluate the model over.
 
   Returns:

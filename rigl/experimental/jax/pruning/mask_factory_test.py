@@ -27,7 +27,7 @@ from rigl.experimental.jax.pruning import mask_factory
 from rigl.experimental.jax.pruning import masked
 
 
-class MaskedDense(flax.nn.Module):
+class MaskedDense(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -40,7 +40,7 @@ class MaskedDense(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask else None)
 
 
@@ -56,7 +56,7 @@ class MaskFactoryTest(parameterized.TestCase):
     _, initial_params = MaskedDense.init_by_shape(self._rng,
                                                   (self._input_shape,))
     # Use the same initialization for both masked/unmasked models.
-    self._model = flax.nn.Model(MaskedDense, initial_params)
+    self._model = flax.deprecated.nn.Model(MaskedDense, initial_params)
 
   def _create_mask(self, mask_type):
     return mask_factory.create_mask(

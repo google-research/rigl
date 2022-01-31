@@ -27,17 +27,17 @@ import numpy as np
 from rigl.experimental.jax.pruning import masked
 
 
-class Dense(flax.nn.Module):
+class Dense(flax.deprecated.nn.Module):
   """Single-layer Dense Non-Masked Network."""
 
   NUM_FEATURES: int = 32
 
   def apply(self, inputs):
     inputs = inputs.reshape(inputs.shape[0], -1)
-    return flax.nn.Dense(inputs, features=self.NUM_FEATURES)
+    return flax.deprecated.nn.Dense(inputs, features=self.NUM_FEATURES)
 
 
-class MaskedDense(flax.nn.Module):
+class MaskedDense(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -50,22 +50,22 @@ class MaskedDense(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask else None)
 
 
-class DenseTwoLayer(flax.nn.Module):
+class DenseTwoLayer(flax.deprecated.nn.Module):
   """Two-layer Dense Non-Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (32, 64)
 
   def apply(self, inputs):
     inputs = inputs.reshape(inputs.shape[0], -1)
-    inputs = flax.nn.Dense(inputs, features=self.NUM_FEATURES[0])
-    return flax.nn.Dense(inputs, features=self.NUM_FEATURES[1])
+    inputs = flax.deprecated.nn.Dense(inputs, features=self.NUM_FEATURES[0])
+    return flax.deprecated.nn.Dense(inputs, features=self.NUM_FEATURES[1])
 
 
-class MaskedTwoLayerDense(flax.nn.Module):
+class MaskedTwoLayerDense(flax.deprecated.nn.Module):
   """Two-layer Dense Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (32, 64)
@@ -78,16 +78,16 @@ class MaskedTwoLayerDense(flax.nn.Module):
     inputs = masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[0],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_1'] if mask else None)
 
 
-class MaskedConv(flax.nn.Module):
+class MaskedConv(flax.deprecated.nn.Module):
   """Single-layer Conv Masked Network."""
 
   NUM_FEATURES: int = 16
@@ -99,11 +99,11 @@ class MaskedConv(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES,
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
 
 
-class MaskedTwoLayerConv(flax.nn.Module):
+class MaskedTwoLayerConv(flax.deprecated.nn.Module):
   """Two-layer Conv Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (16, 32)
@@ -115,17 +115,17 @@ class MaskedTwoLayerConv(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES[0],
         kernel_size=(5, 5),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_1'] if mask is not None else None)
 
 
-class MaskedThreeLayerConvDense(flax.nn.Module):
+class MaskedThreeLayerConvDense(flax.deprecated.nn.Module):
   """Three-layer Conv Masked Network with Dense layer."""
 
   NUM_FEATURES: Sequence[int] = (16, 32, 64)
@@ -137,23 +137,23 @@ class MaskedThreeLayerConvDense(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES[0],
         kernel_size=(5, 5),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
     inputs = masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_1'] if mask is not None else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[2],
         kernel_size=inputs.shape[1:-1],
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_2'] if mask is not None else None)
 
 
-class MaskedTwoLayerMixedConvDense(flax.nn.Module):
+class MaskedTwoLayerMixedConvDense(flax.deprecated.nn.Module):
   """Two-layer Mixed Conv/Dense Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (16, 32)
@@ -165,12 +165,12 @@ class MaskedTwoLayerMixedConvDense(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES[0],
         kernel_size=(5, 5),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_1'] if mask is not None else None)
 
 
@@ -187,7 +187,7 @@ class MaskedTest(parameterized.TestCase):
     self._input = jnp.ones(*self._input_shape)
 
     _, initial_params = Dense.init_by_shape(self._rng, (self._input_shape,))
-    self._unmasked_model = flax.nn.Model(Dense, initial_params)
+    self._unmasked_model = flax.deprecated.nn.Model(Dense, initial_params)
     self._unmasked_output = self._unmasked_model(self._input)
 
     # Use the same initialization for both masked/unmasked models.
@@ -196,11 +196,13 @@ class MaskedTest(parameterized.TestCase):
             'unmasked': initial_params['Dense_0']
         }
     }
-    self._masked_model = flax.nn.Model(MaskedDense, masked_initial_params)
+    self._masked_model = flax.deprecated.nn.Model(MaskedDense,
+                                                  masked_initial_params)
 
     _, initial_params = DenseTwoLayer.init_by_shape(self._rng,
                                                     (self._input_shape,))
-    self._unmasked_model_twolayer = flax.nn.Model(DenseTwoLayer, initial_params)
+    self._unmasked_model_twolayer = flax.deprecated.nn.Model(
+        DenseTwoLayer, initial_params)
     self._unmasked_output_twolayer = self._unmasked_model_twolayer(self._input)
 
     # Use the same initialization for both masked/unmasked models.
@@ -214,26 +216,27 @@ class MaskedTest(parameterized.TestCase):
     }
     _, initial_params = MaskedTwoLayerDense.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_model_twolayer = flax.nn.Model(MaskedTwoLayerDense,
-                                                masked_initial_params)
+    self._masked_model_twolayer = flax.deprecated.nn.Model(
+        MaskedTwoLayerDense, masked_initial_params)
 
     _, initial_params = MaskedConv.init_by_shape(self._rng,
                                                  (self._input_shape,))
-    self._masked_conv_model = flax.nn.Model(MaskedConv, initial_params)
+    self._masked_conv_model = flax.deprecated.nn.Model(MaskedConv,
+                                                       initial_params)
 
     _, initial_params = MaskedTwoLayerConv.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_conv_model_twolayer = flax.nn.Model(MaskedTwoLayerConv,
-                                                     initial_params)
+    self._masked_conv_model_twolayer = flax.deprecated.nn.Model(
+        MaskedTwoLayerConv, initial_params)
 
     _, initial_params = MaskedTwoLayerMixedConvDense.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_mixed_model_twolayer = flax.nn.Model(
+    self._masked_mixed_model_twolayer = flax.deprecated.nn.Model(
         MaskedTwoLayerMixedConvDense, initial_params)
 
     _, initial_params = MaskedThreeLayerConvDense.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_conv_fc_model_threelayer = flax.nn.Model(
+    self._masked_conv_fc_model_threelayer = flax.deprecated.nn.Model(
         MaskedThreeLayerConvDense, initial_params)
 
   def test_fully_masked_layer(self):

@@ -31,7 +31,7 @@ from rigl.experimental.jax.pruning import masked
 from rigl.experimental.jax.pruning import symmetry
 
 
-class MaskedDense(flax.nn.Module):
+class MaskedDense(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network.
 
   Attributes:
@@ -47,11 +47,11 @@ class MaskedDense(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask is not None else None)
 
 
-class MaskedConv(flax.nn.Module):
+class MaskedConv(flax.deprecated.nn.Module):
   """Single-layer Conv Masked Network.
 
   Attributes:
@@ -67,11 +67,11 @@ class MaskedConv(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES,
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
 
 
-class MaskedTwoLayerDense(flax.nn.Module):
+class MaskedTwoLayerDense(flax.deprecated.nn.Module):
   """Two-layer Dense Masked Network.
 
   Attributes:
@@ -87,13 +87,13 @@ class MaskedTwoLayerDense(flax.nn.Module):
     inputs = masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[0],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask is not None else None)
-    inputs = flax.nn.relu(inputs)
+    inputs = flax.deprecated.nn.relu(inputs)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_1'] if mask is not None else None)
 
 
@@ -109,16 +109,17 @@ class SymmetryTest(parameterized.TestCase):
 
     _, initial_params = MaskedDense.init_by_shape(self._rng,
                                                   (self._flat_input_shape,))
-    self._masked_model = flax.nn.Model(MaskedDense, initial_params)
+    self._masked_model = flax.deprecated.nn.Model(MaskedDense, initial_params)
 
     _, initial_params = MaskedConv.init_by_shape(self._rng,
                                                  (self._input_shape,))
-    self._masked_conv_model = flax.nn.Model(MaskedConv, initial_params)
+    self._masked_conv_model = flax.deprecated.nn.Model(MaskedConv,
+                                                       initial_params)
 
     _, initial_params = MaskedTwoLayerDense.init_by_shape(
         self._rng, (self._flat_input_shape,))
-    self._masked_two_layer_model = flax.nn.Model(MaskedTwoLayerDense,
-                                                 initial_params)
+    self._masked_two_layer_model = flax.deprecated.nn.Model(
+        MaskedTwoLayerDense, initial_params)
 
   def test_count_permutations_layer_mask_full(self):
     """Tests count of weight permutations in a full mask."""

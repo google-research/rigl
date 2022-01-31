@@ -36,12 +36,12 @@ class CIFAR10CNNTest(absltest.TestCase):
 
   def test_output_shapes(self):
     """Tests the output shapes of the model."""
-    with flax.nn.stateful() as initial_state:
+    with flax.deprecated.nn.stateful() as initial_state:
       _, initial_params = cifar10_cnn.CIFAR10CNN.init_by_shape(
           self._rng, (self._input_shape,), num_classes=self._num_classes)
-      model = flax.nn.Model(cifar10_cnn.CIFAR10CNN, initial_params)
+      model = flax.deprecated.nn.Model(cifar10_cnn.CIFAR10CNN, initial_params)
 
-    with flax.nn.stateful(initial_state, mutable=False):
+    with flax.deprecated.nn.stateful(initial_state, mutable=False):
       logits = model(self._input, num_classes=self._num_classes, train=False)
 
     self.assertTupleEqual(logits.shape, (self._batch_size, self._num_classes))

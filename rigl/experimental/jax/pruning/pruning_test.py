@@ -25,7 +25,7 @@ from rigl.experimental.jax.pruning import masked
 from rigl.experimental.jax.pruning import pruning
 
 
-class MaskedDense(flax.nn.Module):
+class MaskedDense(flax.deprecated.nn.Module):
   """Single-layer Dense Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -38,11 +38,11 @@ class MaskedDense(flax.nn.Module):
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES,
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask else None)
 
 
-class MaskedTwoLayerDense(flax.nn.Module):
+class MaskedTwoLayerDense(flax.deprecated.nn.Module):
   """Two-layer Dense Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (32, 64)
@@ -55,16 +55,16 @@ class MaskedTwoLayerDense(flax.nn.Module):
     inputs = masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[0],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_0'] if mask else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
-        wrapped_module=flax.nn.Dense,
+        wrapped_module=flax.deprecated.nn.Dense,
         mask=mask['MaskedModule_1'] if mask else None)
 
 
-class MaskedConv(flax.nn.Module):
+class MaskedConv(flax.deprecated.nn.Module):
   """Single-layer Conv Masked Network."""
 
   NUM_FEATURES: int = 32
@@ -76,11 +76,11 @@ class MaskedConv(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES,
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
 
 
-class MaskedTwoLayerConv(flax.nn.Module):
+class MaskedTwoLayerConv(flax.deprecated.nn.Module):
   """Two-layer Conv Masked Network."""
 
   NUM_FEATURES: Sequence[int] = (16, 32)
@@ -92,13 +92,13 @@ class MaskedTwoLayerConv(flax.nn.Module):
         inputs,
         features=self.NUM_FEATURES[0],
         kernel_size=(5, 5),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_0'] if mask is not None else None)
     return masked.MaskedModule(
         inputs,
         features=self.NUM_FEATURES[1],
         kernel_size=(3, 3),
-        wrapped_module=flax.nn.Conv,
+        wrapped_module=flax.deprecated.nn.Conv,
         mask=mask['MaskedModule_1'] if mask is not None else None)
 
 
@@ -114,21 +114,22 @@ class PruningTest(absltest.TestCase):
 
     _, initial_params = MaskedDense.init_by_shape(self._rng,
                                                   (self._input_shape,))
-    self._masked_model = flax.nn.Model(MaskedDense, initial_params)
+    self._masked_model = flax.deprecated.nn.Model(MaskedDense, initial_params)
 
     _, initial_params = MaskedTwoLayerDense.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_model_twolayer = flax.nn.Model(MaskedTwoLayerDense,
-                                                initial_params)
+    self._masked_model_twolayer = flax.deprecated.nn.Model(
+        MaskedTwoLayerDense, initial_params)
 
     _, initial_params = MaskedConv.init_by_shape(self._rng,
                                                  (self._input_shape,))
-    self._masked_conv_model = flax.nn.Model(MaskedConv, initial_params)
+    self._masked_conv_model = flax.deprecated.nn.Model(MaskedConv,
+                                                       initial_params)
 
     _, initial_params = MaskedTwoLayerConv.init_by_shape(
         self._rng, (self._input_shape,))
-    self._masked_conv_model_twolayer = flax.nn.Model(MaskedTwoLayerConv,
-                                                     initial_params)
+    self._masked_conv_model_twolayer = flax.deprecated.nn.Model(
+        MaskedTwoLayerConv, initial_params)
 
   def test_prune_single_layer_dense_no_mask(self):
     """Tests pruning of single dense layer without an existing mask."""

@@ -28,16 +28,17 @@ from rigl.experimental.jax.models import cifar10_cnn
 from rigl.experimental.jax.models import mnist_cnn
 from rigl.experimental.jax.models import mnist_fc
 
-MODELS: Mapping[str, Type[flax.nn.Model]] = {
+MODELS: Mapping[str, Type[flax.deprecated.nn.Model]] = {
     'MNIST_CNN': mnist_cnn.MNISTCNN,
     'MNIST_FC': mnist_fc.MNISTFC,
     'CIFAR10_CNN': cifar10_cnn.CIFAR10CNN,
 }
 
 
-def create_model(name, rng,
-                 input_specs,
-                 **kwargs):
+def create_model(
+    name, rng,
+    input_specs, **kwargs
+):
   """Creates a Model.
 
   Args:
@@ -47,7 +48,7 @@ def create_model(name, rng,
       **kwargs: list of model specific keyword arguments.
 
   Returns:
-      A tuple of FLAX model (flax.nn.Model), and initial model state.
+      A tuple of FLAX model (flax.deprecated.nn.Model), and initial model state.
 
   Raises:
       ValueError if a model with the given name does not exist.
@@ -55,12 +56,12 @@ def create_model(name, rng,
   if name not in MODELS:
     raise ValueError('No such model: {}'.format(name))
 
-  with flax.nn.stateful() as init_state:
-    with flax.nn.stochastic(rng):
+  with flax.deprecated.nn.stateful() as init_state:
+    with flax.deprecated.nn.stochastic(rng):
       model_class = MODELS[name].partial(**kwargs)
       _, params = model_class.init_by_shape(rng, input_specs)
 
-  return flax.nn.Model(model_class, params), init_state
+  return flax.deprecated.nn.Model(model_class, params), init_state
 
 
 def update_model(model,
@@ -74,4 +75,4 @@ def update_model(model,
   Returns:
       A FLAX model.
   """
-  return flax.nn.Model(model.module.partial(**kwargs), model.params)
+  return flax.deprecated.nn.Model(model.module.partial(**kwargs), model.params)

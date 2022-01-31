@@ -113,7 +113,7 @@ class TrainingTest(absltest.TestCase):
     best_model, best_metrics = trainer.train(self._num_epochs)
 
     with self.subTest(name='best_model_type'):
-      self.assertIsInstance(best_model, flax.nn.Model)
+      self.assertIsInstance(best_model, flax.deprecated.nn.Model)
 
     with self.subTest(name='train_accuracy'):
       self.assertBetween(best_metrics['train_accuracy'], 0., 1.)
@@ -153,7 +153,7 @@ class TrainingTest(absltest.TestCase):
 
     best_model, best_metrics = trainer.train(self._num_epochs)
     with self.subTest(name='best_model_type'):
-      self.assertIsInstance(best_model, flax.nn.Model)
+      self.assertIsInstance(best_model, flax.deprecated.nn.Model)
 
     with self.subTest(name='train_accuracy'):
       self.assertBetween(best_metrics['train_accuracy'], 0., 1.)
@@ -190,7 +190,7 @@ class TrainingTest(absltest.TestCase):
                                              pruning_rate_fn=lambda _: 0.5)
 
     with self.subTest(name='best_model_type'):
-      self.assertIsInstance(best_model, flax.nn.Model)
+      self.assertIsInstance(best_model, flax.deprecated.nn.Model)
 
     with self.subTest(name='train_accuracy'):
       self.assertBetween(best_metrics['train_accuracy'], 0., 1.)
@@ -227,7 +227,7 @@ class TrainingTest(absltest.TestCase):
         self._num_epochs, pruning_rate_fn={'MaskedModule_0': lambda _: 0.5})
 
     with self.subTest(name='best_model_type'):
-      self.assertIsInstance(best_model, flax.nn.Model)
+      self.assertIsInstance(best_model, flax.deprecated.nn.Model)
 
     with self.subTest(name='train_accuracy'):
       self.assertBetween(best_metrics['train_accuracy'], 0., 1.)

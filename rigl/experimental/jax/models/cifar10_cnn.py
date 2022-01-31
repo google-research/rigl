@@ -30,7 +30,7 @@ from rigl.experimental.jax.pruning import init
 from rigl.experimental.jax.pruning import masked
 
 
-class CIFAR10CNN(flax.nn.Module):
+class CIFAR10CNN(flax.deprecated.nn.Module):
   """Small CIFAR10 CNN."""
 
   def apply(self,
@@ -38,9 +38,9 @@ class CIFAR10CNN(flax.nn.Module):
             num_classes,
             filter_shape = (3, 3),
             filters = (32, 32, 64, 64, 128, 128),
-            init_fn=flax.nn.initializers.kaiming_normal,
+            init_fn=flax.deprecated.nn.initializers.kaiming_normal,
             train=True,
-            activation_fn = flax.nn.relu,
+            activation_fn = flax.deprecated.nn.relu,
             masks = None,
             masked_layer_indices = None):
     """Applies a convolution to the inputs.
@@ -76,21 +76,21 @@ class CIFAR10CNN(flax.nn.Module):
     masks = masked.generate_model_masks(depth, masks,
                                         masked_layer_indices)
 
-    batch_norm = flax.nn.BatchNorm.partial(
+    batch_norm = flax.deprecated.nn.BatchNorm.partial(
         use_running_average=not train, momentum=0.99, epsilon=1e-5)
 
     for i, filter_num in enumerate(filters):
       if f'MaskedModule_{i}' in masks:
         logging.info('Layer %d is masked in model', i)
         mask = masks[f'MaskedModule_{i}']
-        inputs = masked.masked(flax.nn.Conv, mask)(
+        inputs = masked.masked(flax.deprecated.nn.Conv, mask)(
             inputs,
             features=filter_num,
             kernel_size=filter_shape,
             kernel_init=init.sparse_init(
                 init_fn(), mask['kernel'] if mask is not None else None))
       else:
-        inputs = flax.nn.Conv(
+        inputs = flax.deprecated.nn.Conv(
             inputs,
             features=filter_num,
             kernel_size=filter_shape,
@@ -99,21 +99,21 @@ class CIFAR10CNN(flax.nn.Module):
       inputs = activation_fn(inputs)
 
       if i % 2 == 1:
-        inputs = flax.nn.max_pool(
+        inputs = flax.deprecated.nn.max_pool(
             inputs, window_shape=(2, 2), strides=(2, 2), padding='VALID')
 
     # Global average pooling if we have spatial dimensions left.
-    inputs = flax.nn.avg_pool(
+    inputs = flax.deprecated.nn.avg_pool(
         inputs, window_shape=(inputs.shape[1:-1]), padding='VALID')
     inputs = inputs.reshape((inputs.shape[0], -1))
 
     # This is effectively a Dense layer, but we cast it as a convolution layer
     # to allow us to easily propagate masks, avoiding b/156135283.
-    inputs = flax.nn.Conv(
+    inputs = flax.deprecated.nn.Conv(
         inputs,
         features=num_classes,
         kernel_size=inputs.shape[1:-1],
-        kernel_init=flax.nn.initializers.xavier_normal())
+        kernel_init=flax.deprecated.nn.initializers.xavier_normal())
     inputs = batch_norm(inputs, name='bn_dense_1')
     inputs = jnp.squeeze(inputs)
-    return flax.nn.log_softmax(inputs)
+    return flax.deprecated.nn.log_softmax(inputs)

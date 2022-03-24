@@ -497,7 +497,7 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
     assert not FLAGS.transpose_input  # channels_first only for GPU
     features = tf.transpose(features, [0, 3, 1, 2])
 
-  if FLAGS.transpose_input and mode != tf.estimator.ModeKeys.PREDICT:
+  if FLAGS.transpose_input and mode != tf_estimator.ModeKeys.PREDICT:
     features = tf.transpose(features, [3, 0, 1, 2])  # HWCN to NHWC
 
   # Normalize the image to zero mean and unit variance.
@@ -541,7 +541,7 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
         data_format=FLAGS.data_format,
         weight_decay=FLAGS.weight_decay)
 
-    is_training = (mode == tf.estimator.ModeKeys.TRAIN)
+    is_training = (mode == tf_estimator.ModeKeys.TRAIN)
     if FLAGS.use_batch_statistics:
       is_training = True
     return network(inputs=features, is_training=is_training)
@@ -553,16 +553,16 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
   elif FLAGS.precision == 'float32':
     logits = build_network()
 
-  if mode == tf.estimator.ModeKeys.PREDICT:
+  if mode == tf_estimator.ModeKeys.PREDICT:
     predictions = {
         'classes': tf.argmax(logits, axis=1),
         'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
     }
-    return tf.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode,
         predictions=predictions,
         export_outputs={
-            'classify': tf.estimator.export.PredictOutput(predictions)
+            'classify': tf_estimator.export.PredictOutput(predictions)
         })
   output_dir = params['output_dir']
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
@@ -584,14 +584,14 @@ def resnet_model_fn_w_pruning(features, labels, mode, params):
   loss = cross_loss + reg_loss
 
   host_call = None
-  if mode == tf.estimator.ModeKeys.TRAIN:
+  if mode == tf_estimator.ModeKeys.TRAIN:
     host_call, train_op = train_function(training_method, loss, cross_loss,
                                          reg_loss, output_dir, use_tpu)
   else:
     train_op = None
 
   eval_metrics = None
-  if mode == tf.estimator.ModeKeys.EVAL:
+  if mode == tf_estimator.ModeKeys.EVAL:
 
     def metric_fn(labels, logits, cross_loss, reg_loss):
       """Calculate eval metrics."""
@@ -693,9 +693,9 @@ class ExportModelHook(tf.train.SessionRunHook):
       self.last_export = global_step
       contrib_estimator.export_all_saved_models(
           self.classifier, os.path.join(self.export_dir, str(global_step)), {
-              tf.estimator.ModeKeys.EVAL:
+              tf_estimator.ModeKeys.EVAL:
                   self.supervised_input_receiver_fn,
-              tf.estimator.ModeKeys.PREDICT:
+              tf_estimator.ModeKeys.PREDICT:
                   imagenet_input.image_serving_input_fn
           })
 

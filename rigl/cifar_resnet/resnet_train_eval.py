@@ -34,6 +34,7 @@ from rigl.cifar_resnet.data_helper import input_fn
 from rigl.cifar_resnet.resnet_model import WideResNetModel
 from rigl.imagenet_resnet import utils
 import tensorflow.compat.v1 as tf
+from tensorflow.compat.v1 import estimator as tf_estimator
 from tensorflow.contrib import layers as contrib_layers
 from tensorflow.contrib import training as contrib_training
 from tensorflow.contrib.model_pruning.python import pruning
@@ -397,16 +398,16 @@ def wide_resnet_w_pruning(features, labels, mode, params):
       depth=FLAGS.resnet_depth,
       width=FLAGS.resnet_width)
 
-  if mode == tf.estimator.ModeKeys.PREDICT:
+  if mode == tf_estimator.ModeKeys.PREDICT:
     predictions = {
         'classes': tf.argmax(logits, axis=1),
         'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
     }
-    return tf.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode,
         predictions=predictions,
         export_outputs={
-            'classify': tf.estimator.export.PredictOutput(predictions)
+            'classify': tf_estimator.export.PredictOutput(predictions)
         })
 
   with tf.name_scope('computing_cross_entropy_loss'):
@@ -417,11 +418,11 @@ def wide_resnet_w_pruning(features, labels, mode, params):
   with tf.name_scope('computing_total_loss'):
     total_loss = tf.losses.get_total_loss(add_regularization_losses=True)
 
-  if mode == tf.estimator.ModeKeys.TRAIN:
+  if mode == tf_estimator.ModeKeys.TRAIN:
     hooks, eval_metrics, train_op = train_fn(training_method, global_step,
                                              total_loss, train_dir, accuracy,
                                              top_5_accuracy)
-  elif mode == tf.estimator.ModeKeys.EVAL:
+  elif mode == tf_estimator.ModeKeys.EVAL:
     hooks = None
     train_op = None
     with tf.name_scope('summaries'):
@@ -461,7 +462,7 @@ def wide_resnet_w_pruning(features, labels, mode, params):
     scaffold = None
     tf.logging.info('No mask is set, starting dense.')
 
-  return tf.estimator.EstimatorSpec(
+  return tf_estimator.EstimatorSpec(
       mode=mode,
       training_hooks=hooks,
       loss=total_loss,
@@ -511,14 +512,14 @@ def main(argv):
   params['mode'] = FLAGS.mode
   params['training_method'] = FLAGS.training_method
 
-  run_config = tf.estimator.RunConfig(
+  run_config = tf_estimator.RunConfig(
       model_dir=train_dir,
       keep_checkpoint_max=FLAGS.keep_checkpoint_max,
       save_summary_steps=FLAGS.summaries_steps,
       save_checkpoints_steps=FLAGS.checkpoint_steps,
       log_step_count_steps=100)
 
-  classifier = tf.estimator.Estimator(
+  classifier = tf_estimator.Estimator(
       model_fn=wide_resnet_w_pruning,
       model_dir=train_dir,
       config=run_config,

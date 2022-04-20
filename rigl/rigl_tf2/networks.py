@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """This module has networks used in experiments.
 """
 from typing import Optional, Tuple  # Non-expensive-to-import types.

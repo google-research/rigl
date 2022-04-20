@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Reads ResNet-50 sparsity distributions found by STR.
 
 [STR]: https://arxiv.org/abs/2002.03231

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 r"""Visualizes the dumped masks using matplotlib.
 
 We count the number of outgoing edges from the input dimensions. For the first

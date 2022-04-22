@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Weight Symmetry: Train model with randomly shuffled sparse mask."""
 # TODO: Refactor drivers to separate logic from flags/IO.
 import ast

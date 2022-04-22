@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Weight Symmetry: Iteratively Prune Model during Training.
 
 Command for training and pruning an MNIST fully-connected model for 10 epochs

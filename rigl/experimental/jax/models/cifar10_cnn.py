@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """CIFAR10 CNN.
 
 A small CNN for the CIFAR10 dataset, consists of a number of convolutional

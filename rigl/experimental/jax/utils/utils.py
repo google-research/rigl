@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Convenience Functions for NN training.
 
 Misc. common functions used in training NN models.

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Tests for weight_symmetry.datasets.mnist."""
 from absl.testing import absltest
 import numpy as np

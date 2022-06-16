@@ -1,0 +1,24 @@
+include 'third_party/py/dopamine/agents/dqn/configs/dqn.gin'
+
+import rigl.rl.dqn_agents
+
+DQNAgent.network = @dqn_agents.ImpalaNetwork
+DQNAgent.optimizer = @tf.train.AdamOptimizer()
+tf.train.AdamOptimizer.learning_rate = 0.0001
+tf.train.AdamOptimizer.epsilon = 0.0003125
+
+WrappedReplayBuffer.batch_size = 32  # Same as original
+
+SparseDQNAgent.mode = 'dense'
+SparseDQNAgent.weight_decay = 1e-05
+
+atari_lib.create_atari_environment.game_name = 'Pong'
+SparseTrainRunner.load_env_fn = @atari_lib.create_atari_environment
+
+SparseTrainRunner.agent_type = 'dqn'
+SparseTrainRunner.num_iterations = 40
+SparseTrainRunner.training_steps = 250000
+SparseTrainRunner.evaluation_steps = 125000
+SparseTrainRunner.max_steps_per_episode = 27000  # Default max episode length.
+
+ImpalaNetwork.use_batch_norm = False

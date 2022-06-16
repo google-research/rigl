@@ -1,0 +1,25 @@
+include 'third_party/py/rigl/rl/tfagents/configs/sac_mujoco_dense_config.gin'
+
+# Configs to run SAC training for pruning on mujoco environments.
+train_eval.train_mode_actor = 'sparse'
+# Both critics
+train_eval.train_mode_value = 'sparse'
+
+train_eval.sparse_output_layer = True
+
+init_masks.fixed_sparse_init = True
+# This must be set to 0 when pruning to avoid
+# initializing the masks
+init_masks.sparsity = 0.0
+
+wrap_all_layers.mode = 'prune'
+wrap_all_layers.initial_sparsity = 0.0
+wrap_all_layers.final_sparsity = 0.9
+wrap_all_layers.mask_init_method = 'erdos_renyi_kernel'
+# 1M steps total
+# Start at 20%, end at 80%
+wrap_all_layers.begin_step = 200000
+wrap_all_layers.end_step = 800000
+wrap_all_layers.frequency = 1000
+
+log_sparsities.log_images = False

@@ -1,0 +1,23 @@
+include 'third_party/py/rigl/rl/tfagents/configs/dqn_atari_dense_config.gin'
+
+# Configs to run DQN training for pruning on atari environments.
+
+train_eval.sparse_output_layer = True
+train_eval.train_mode = 'sparse'
+
+init_masks.fixed_sparse_init = False
+# This must be set to 0 when pruning to avoid
+# initializing the masks
+init_masks.sparsity = 0.0
+
+wrap_layer.mode = 'prune'
+wrap_layer.initial_sparsity = 0.0
+wrap_layer.final_sparsity = 0.9
+# 10M steps total
+# Start at 20%, end at 80%
+wrap_layer.begin_step = 2000000
+wrap_layer.end_step = 8000000
+wrap_layer.frequency = 1000
+
+log_sparsities.log_images = False
+

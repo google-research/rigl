@@ -1,0 +1,23 @@
+include 'third_party/py/rigl/rl/tfagents/configs/ppo_mujoco_dense_config.gin'
+
+train_eval.sparse_output_layer = True
+train_eval.train_mode_actor = 'sparse'
+train_eval.train_mode_value = 'sparse'
+
+init_masks.fixed_sparse_init = False
+# This must be set to 0 when pruning to avoid
+# initializing the masks
+init_masks.sparsity = 0.0
+
+wrap_all_layers.mode = 'prune'
+wrap_all_layers.initial_sparsity = 0.0
+wrap_all_layers.final_sparsity = 0.9
+wrap_all_layers.mask_init_method = 'erdos_renyi_kernel'
+# 156,480 steps total
+# Start at ~20% = 31,296
+# End at ~75% = 117,360
+wrap_all_layers.begin_step = 32000
+wrap_all_layers.end_step = 120000
+wrap_all_layers.frequency = 500
+
+log_sparsities.log_images = False

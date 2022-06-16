@@ -1,0 +1,22 @@
+include 'third_party/py/rigl/rl/sparsetrain_configs/dqn_atari_dense.gin'
+
+SparseDQNAgent.mode = 'rigl'
+
+# For sparse training methods we don't use the pruning library to update the
+# masks. Therefore we need to disable it. Following `pruning` flags serve that
+# purpose.
+pruning.final_sparsity = 0.
+pruning.begin_step = 1000000000 # 1B. High begin_step, so it never starts.
+
+init_masks.mask_init_method = 'erdos_renyi_kernel'
+init_masks.fixed_sparse_init = True
+init_masks.sparsity = 0.9
+
+UpdatedRigLOptimizer.begin_step = 0
+# 2M = 80% optimizer steps when training for 40M env steps with a frame skip
+# of 4 (= 10M transitions), and training every 4th env transition (2.5M train
+# steps in total).
+UpdatedRigLOptimizer.end_step = 2000000
+UpdatedRigLOptimizer.frequency = 5000
+UpdatedRigLOptimizer.drop_fraction_anneal = 'cosine'
+UpdatedRigLOptimizer.drop_fraction = 0.3

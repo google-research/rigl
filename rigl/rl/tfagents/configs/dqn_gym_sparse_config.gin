@@ -1,0 +1,27 @@
+include 'third_party/py/rigl/rl/tfagents/configs/dqn_gym_dense_config.gin'
+
+# Configs to run DQN training for static, set, and rigl on classic control
+# environments.
+
+train_eval.sparse_output_layer = True
+train_eval.train_mode = 'sparse'
+
+init_masks.mask_init_method = 'erdos_renyi_kernel'
+init_masks.fixed_sparse_init = True
+init_masks.sparsity = 0.9
+
+# For static, set this to ''
+# For rigl set this to 'rigl'
+# For set set this to 'set'
+mask_updater.update_alg = ''
+mask_updater.schedule_alg = 'cosine'
+mask_updater.update_freq = 1000
+mask_updater.init_drop_fraction = 0.1
+# Environment:train steps ratio is 1:1, we stop after 75% training = 75,000
+mask_updater.last_update_step = 75000
+mask_updater.use_stateless = False
+
+wrap_all_layers.mode = 'constant'
+
+log_sparsities.log_images = False
+

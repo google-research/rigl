@@ -1,0 +1,21 @@
+# Configs to run DQN training for dense networks on classic control environments.
+
+train_eval.env_name='CartPole-v0'
+train_eval.fc_layer_params = (512, 512)
+train_eval.target_update_period = 100
+train_eval.batch_size = 128
+# Environment:train steps ratio is 1:1
+train_eval.num_iterations = 100000
+train_eval.weight_decay = 0.0
+train_eval.width = 1.0
+train_eval.policy_save_interval = 10000
+train_eval.epsilon_greedy = 0.01
+train_eval.eval_interval = 2000
+train_eval.eval_episodes = 20
+
+train_eval.sparse_output_layer = False
+train_eval.train_mode = 'dense'
+
+mask_updater.update_alg = ''
+mask_updater.schedule_alg = ''
+log_snr.freq=5000

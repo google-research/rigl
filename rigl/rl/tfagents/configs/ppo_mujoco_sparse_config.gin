@@ -1,0 +1,27 @@
+include 'third_party/py/rigl/rl/tfagents/configs/ppo_mujoco_dense_config.gin'
+
+# Config to run PPO training for static, set, and rigl on mujoco environments.
+
+train_eval.sparse_output_layer = True
+train_eval.train_mode_actor = 'sparse'
+train_eval.train_mode_value = 'sparse'
+
+init_masks.mask_init_method = 'erdos_renyi_kernel'
+init_masks.fixed_sparse_init = True
+init_masks.sparsity = 0.9
+
+# For static, set this to ''
+# For rigl set this to 'rigl'
+# For set set this to 'set'
+mask_updater.update_alg = ''
+mask_updater.schedule_alg = 'cosine'
+mask_updater.update_freq = 1000
+mask_updater.init_drop_fraction = 0.1
+# 156,480 steps total, end at 75% = 117,360
+mask_updater.last_update_step = 120000
+mask_updater.use_stateless = False
+
+wrap_all_layers.mode = 'constant'
+
+log_sparsities.log_images = False
+

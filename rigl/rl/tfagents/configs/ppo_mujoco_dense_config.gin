@@ -1,0 +1,26 @@
+# Config to run training for dense on mujoco environments.
+
+train_eval.env_name='HalfCheetah-v2'
+train_eval.actor_fc_layers = (64, 64)
+train_eval.value_fc_layers = (64, 64)
+# In order to execute ~1M environment steps, we run 489 iterations
+# (`--num_iterations=489`) which results in 1,001,472 environment steps. Each
+# iteration results in 320 training steps (or 320 gradient updates, this is
+# calulated from environemnt_steps * num_epochs / minibatch_size) and 2,048
+# environment steps. Thus 489 *2,048 = 1,001,472 environment steps and
+# 489 * 320 = 156,480 training steps.
+train_eval.num_iterations = 489
+train_eval.weight_decay = 0.001
+train_eval.width = 1.0
+train_eval.policy_save_interval = 51000
+train_eval.num_epochs = 10
+train_eval.eval_interval = 2000
+train_eval.eval_episodes = 20
+
+train_eval.sparse_output_layer = False
+train_eval.train_mode_actor = 'dense'
+train_eval.train_mode_value = 'dense'
+
+mask_updater.update_alg = ''
+mask_updater.schedule_alg = ''
+log_snr.freq=5000

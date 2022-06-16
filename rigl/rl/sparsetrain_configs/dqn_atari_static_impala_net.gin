@@ -1,0 +1,11 @@
+include 'third_party/py/rigl/rl/sparsetrain_configs/dqn_atari_dense_impala_net.gin'
+
+SparseDQNAgent.mode = 'static'
+
+# For sparse training methods we don't use the pruning library to update the
+# masks. Therefore we need to disable it. Following `pruning` flags serve that
+# purpose.
+pruning.final_sparsity = 0.
+pruning.begin_step = 1000000000  # 1B. High begin_step, so it never starts.
+init_masks.mask_init_method = 'erdos_renyi_kernel'
+init_masks.sparsity = 0.95

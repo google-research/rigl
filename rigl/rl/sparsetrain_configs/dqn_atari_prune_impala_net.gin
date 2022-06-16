@@ -1,0 +1,18 @@
+include 'third_party/py/rigl/rl/sparsetrain_configs/dqn_atari_dense_impala_net.gin'
+
+SparseDQNAgent.mode = 'prune'
+
+
+get_pruning_sparsities.target_sparsity = 0.95
+get_pruning_sparsities.mask_init_method = 'erdos_renyi_kernel'
+
+pruning.initial_sparsity = 0.0
+# 0.5M = 20% optimizer steps when training for 40M env steps with a frame skip
+# of 4 (= 10M transitions), and training every 4th env transition (2.5M train
+# steps in total).
+pruning.begin_step = 500000  # 500k
+# 2M = 80% optimizer steps when training for 40M env steps with a frame skip
+# of 4 (= 10M transitions), and training every 4th env transition (2.5M train
+# steps in total).
+pruning.end_step = 2000000    # 2M
+pruning.frequency = 5000

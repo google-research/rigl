@@ -4,7 +4,7 @@ gin-config
 mujoco-py<2.2,>=2.1
 numpy>=1.15.4
 six>=1.12.0
-tensorflow==2.6  # change to 'tensorflow-gpu' for gpu support
+tensorflow==2.7.2  # change to 'tensorflow-gpu' for gpu support
 tensorflow-datasets==2.1
 tensorflow-model-optimization
 tf-agents[reverb]

@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/sparsetrain_configs/dqn_atari_dense_impala_net.gin'
+include 'rigl/rl/sparsetrain_configs/dqn_atari_dense_impala_net.gin'
 
 SparseDQNAgent.mode = 'rigl'
 

@@ -20,8 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
-import absl.testing.parameterized as parameterized
+from absl.testing import parameterized
 import numpy as np
 from rigl import sparse_utils
 import tensorflow.compat.v1 as tf
@@ -45,7 +44,7 @@ class GetMaskRandomTest(tf.test.TestCase, parameterized.TestCase):
     mask2_array, = sess.run([mask2])
     self.assertEqual(np.sum(mask1_array), np.sum(mask2_array))
 
-  @parameterized.parameters(((30, 4), 0.5, 60), ((1, 2, 1, 4), 0.8, 1),
+  @parameterized.parameters(((30, 4), 0.5, 60), ((1, 2, 1, 4), 0.8, 2),
                             ((30,), 0.1, 27))
   def testMaskFraction(self, shape, sparsity, expected_ones):
     sess = self._setup_session()

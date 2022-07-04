@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/tfagents/configs/dqn_gym_dense_config.gin'
+include 'rigl/rl/tfagents/configs/dqn_gym_dense_config.gin'
 
 # Configs to run DQN training for pruning on classic control environments.
 

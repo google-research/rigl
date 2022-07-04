@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/sparsetrain_configs/dqn_atari_dense.gin'
+include 'rigl/rl/sparsetrain_configs/dqn_atari_dense.gin'
 
 SparseDQNAgent.mode = 'prune'
 

@@ -14,16 +14,20 @@
 # limitations under the License.
 
 """Defines pruning and sparse training utilities."""
+
 import functools
 import re
+
 import gin
-from rigl import sparse_optimizers
+from rigl import sparse_optimizers_base as sparse_opt_base
 from rigl import sparse_utils
 from rigl.rigl_tf2 import init_utils
 import tensorflow as tf
 import tensorflow.compat.v1 as tf1
+
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
 
 PRUNING_WRAPPER = pruning_wrapper.PruneLowMagnitude
 PRUNED_LAYER_TYPES = (tf.keras.layers.Conv2D, tf.keras.layers.Dense)
@@ -190,92 +194,51 @@ def log_sparsities(model):
       tf1.summary.scalar(f'threshold/{threshold.name}', threshold)
 
 
-@gin.configurable()
-class UpdatedRigLOptimizer(sparse_optimizers.SparseRigLOptimizer):
-  """Sparse optimizer that grows connections with the pre-removal gradients.
+class SparseOptTf2Mixin:
+  """Tf2 model_optimization pruning library specific variable retrieval."""
 
-  Attributes:
-    optimizer: tf.train.Optimizer
-    begin_step: int, first iteration where masks are updated.
-    end_step: int, iteration after which no mask is updated.
-    frequency: int, of mask update operations.
-    drop_fraction: float, of connections to drop during each update.
-    drop_fraction_anneal: str or None, if supplied used to anneal the drop
-      fraction.
-    use_locking: bool, passed to the super.
-    grow_init: str, name of the method used to initialize new connections.
-    init_avg_scale: float, used to scale the gradient when initializing the,
-      momentum values of new connections. We hope this will improve training,
-      compare to starting from 0 for the new connections. Set this to something
-      between 0 and 1 / (1 - momentum). This is because in the current
-      implementation of MomentumOptimizer, aggregated values converge to 1 / (1
-      - momentum) with constant gradients.
-    use_tpu: bool, if true the masked_gradients are aggregated.
-    name: bool, passed to the super.
-  """
+  def compute_gradients(self, *args, **kwargs):
+    """Wraps the compute gradient of passed optimizer."""
+    return self._optimizer.compute_gradients(*args, **kwargs)
+
+  def set_model(self, model):
+    self.model = model
+
+  def get_weights(self):
+    all_weights = [
+        layer.pruning_vars[0][0] for layer in get_all_pruning_layers(self.model)
+    ]
+    return all_weights
+
+  def get_masks(self):
+    all_masks = [
+        layer.pruning_vars[0][1] for layer in get_all_pruning_layers(self.model)
+    ]
+    return all_masks
+
+  def get_masked_weights(self):
+    all_masked_weights = [
+        w * m for w, m in zip(self.get_weights(), self.get_masks())
+    ]
+    return all_masked_weights
+
+
+@gin.configurable()
+class SparseSETOptimizer(SparseOptTf2Mixin,
+                         sparse_opt_base.SparseSETOptimizerBase):
+
+  def _before_apply_gradients(self, grads_and_vars):
+    return tf1.no_op()
+
+
+@gin.configurable()
+class UpdatedRigLOptimizer(SparseOptTf2Mixin,
+                           sparse_opt_base.SparseRigLOptimizerBase):
 
   def _before_apply_gradients(self, grads_and_vars):
     """Updates momentum before updating the weights with gradient."""
     self._weight2masked_grads = {w.name: g for g, w in grads_and_vars}
     return tf1.no_op()
-
-  def compute_gradients(self, *args, **kwargs):
-    """Wraps the compute gradient of passed optimizer."""
-    return self._optimizer.compute_gradients(*args, **kwargs)
-
-  def set_model(self, model):
-    self.model = model
-
-  def get_weights(self):
-    all_weights = [
-        layer.pruning_vars[0][0] for layer in get_all_pruning_layers(self.model)
-    ]
-    return all_weights
-
-  def get_masks(self):
-    all_masks = [
-        layer.pruning_vars[0][1] for layer in get_all_pruning_layers(self.model)
-    ]
-    return all_masks
-
-  def get_masked_weights(self):
-    all_masked_weights = [
-        w * m for w, m in zip(self.get_weights(), self.get_masks())
-    ]
-    return all_masked_weights
-
-
-@gin.configurable
-class UpdatedSETOptimizer(sparse_optimizers.SparseSETOptimizer):
-  """Implementation of dynamic sparse SET optimizer."""
-
-  def _before_apply_gradients(self, grads_and_vars):
-    return tf1.no_op()
-
-  def compute_gradients(self, *args, **kwargs):
-    """Wraps the compute gradient of passed optimizer."""
-    return self._optimizer.compute_gradients(*args, **kwargs)
-
-  def set_model(self, model):
-    self.model = model
-
-  def get_weights(self):
-    all_weights = [
-        layer.pruning_vars[0][0] for layer in get_all_pruning_layers(self.model)
-    ]
-    return all_weights
-
-  def get_masks(self):
-    all_masks = [
-        layer.pruning_vars[0][1] for layer in get_all_pruning_layers(self.model)
-    ]
-    return all_masks
-
-  def get_masked_weights(self):
-    all_masked_weights = [
-        w * m for w, m in zip(self.get_weights(), self.get_masks())
-    ]
-    return all_masked_weights
 
 
 @gin.configurable()

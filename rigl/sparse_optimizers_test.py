@@ -19,16 +19,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
 import itertools
+
 from absl import flags
-import absl.testing.parameterized as parameterized
+from absl.testing import parameterized
 import numpy as np
 from rigl import sparse_optimizers
 from rigl import sparse_utils
 import tensorflow.compat.v1 as tf  # tf
+
 from tensorflow.contrib.model_pruning.python import pruning
 from tensorflow.contrib.model_pruning.python.layers import layers
+
 
 FLAGS = flags.FLAGS
 

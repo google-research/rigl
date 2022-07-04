@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/tfagents/configs/ppo_mujoco_dense_config.gin'
+include 'rigl/rl/tfagents/configs/ppo_mujoco_dense_config.gin'
 
 train_eval.sparse_output_layer = True
 train_eval.train_mode_actor = 'sparse'

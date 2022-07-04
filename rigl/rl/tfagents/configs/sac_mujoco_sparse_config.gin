@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/tfagents/configs/sac_mujoco_dense_config.gin'
+include 'rigl/rl/tfagents/configs/sac_mujoco_dense_config.gin'
 
 # Configs to run SAC training for static, set, and rigl on mujoco
 # environments.

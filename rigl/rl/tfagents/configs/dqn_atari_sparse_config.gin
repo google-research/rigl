@@ -1,4 +1,4 @@
-include 'third_party/py/rigl/rl/tfagents/configs/dqn_atari_dense_config.gin'
+include 'rigl/rl/tfagents/configs/dqn_atari_dense_config.gin'
 
 # Configs to run DQN training for static, set, and rigl on atari
 # environments.

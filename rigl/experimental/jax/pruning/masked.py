@@ -98,9 +98,9 @@ class MaskedModule(flax.deprecated.nn.Module):
 
     if mask is not None:
       try:
-        masked_params = jax.tree_util.tree_multimap(
-            lambda x, *xs: x if xs[0] is None else x * xs[0],
-            unmasked_params, mask)
+        masked_params = jax.tree_util.tree_map(
+            lambda x, *xs: x
+            if xs[0] is None else x * xs[0], unmasked_params, mask)
       except ValueError as err:
         raise ValueError('Mask is invalid for model.') from err
 

@@ -492,8 +492,8 @@ class MaskedTest(parameterized.TestCase):
     gen_mask = masked.simple_mask(self._masked_model, jnp.zeros, ['kernel'])
 
     result, _ = jax.tree_flatten(
-        jax.tree_util.tree_multimap(lambda x, *xs: (x == xs[0]).all(), mask,
-                                    gen_mask))
+        jax.tree_util.tree_map(lambda x, *xs: (x == xs[0]).all(), mask,
+                               gen_mask))
 
     self.assertTrue(all(result))
 
@@ -520,8 +520,8 @@ class MaskedTest(parameterized.TestCase):
                                   ['kernel'])
 
     result, _ = jax.tree_flatten(
-        jax.tree_util.tree_multimap(lambda x, *xs: (x == xs[0]).all(), mask,
-                                    gen_mask))
+        jax.tree_util.tree_map(lambda x, *xs: (x == xs[0]).all(), mask,
+                               gen_mask))
 
     self.assertTrue(all(result))
 

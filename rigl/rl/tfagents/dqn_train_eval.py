@@ -25,6 +25,7 @@ from absl import flags
 from absl import logging
 
 import gin
+import numpy as np
 import reverb
 from rigl.rigl_tf2 import mask_updaters
 from rigl.rl import sparse_utils
@@ -64,6 +65,10 @@ flags.DEFINE_multi_string(
     'Gin bindings to override the values set in the config files '
     '(e.g. "train_eval.env_name=Acrobot-v1",'
     '      "init_masks.sparsity=0.9").')
+flags.DEFINE_float(
+    'average_last_fraction', 0.1,
+    'Tells what fraction latest evaluation scores are averaged. This is used'
+    ' to reduce variance.')
 
 # BEGIN_GOOGLE_INTERNAL
 # Env params
@@ -485,6 +490,11 @@ def train_eval(
       for metric in eval_actor.metrics:
         if isinstance(metric, py_metrics.AverageReturnMetric):
           average_returns.append(metric._buffer.mean())
+
+  # Log last section of evaluation scores for the final metric.
+  idx = int(FLAGS.average_last_fraction * len(average_returns))
+  logging.info('Step %d, Average Return: %f', env_step_metric.result(),
+               np.mean(average_returns[-idx:]))
 
   rb_observer.close()
   reverb_server.stop()

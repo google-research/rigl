@@ -199,5 +199,5 @@ class SparseTrainRunner(run_experiment.Runner):
       self._log_experiment(iteration, statistics)
       self._checkpoint_experiment(iteration)
     last_n = int(self._num_iterations * AVG_REWARD_FRAC)
-    self.xm_objective_value.create_measurement(
-        np.mean(all_eval_returns[-last_n:]), step=iteration)
+    avg_return = np.mean(all_eval_returns[-last_n:])
+    logging.info('Step %d, Average Return: %f', iteration, avg_return)

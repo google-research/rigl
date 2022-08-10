@@ -24,6 +24,7 @@ from absl import flags
 from absl import logging
 
 import gin
+import numpy as np
 import reverb
 from rigl.rigl_tf2 import mask_updaters
 from rigl.rl import sparse_utils
@@ -66,7 +67,10 @@ flags.DEFINE_bool('is_atari', False, 'Whether the env is an atari game.')
 flags.DEFINE_bool('is_mujoco', False, 'Whether the env is a mujoco game.')
 flags.DEFINE_bool('is_classic', False,
                   'Whether the env is a classic control game.')
-
+flags.DEFINE_float(
+    'average_last_fraction', 0.1,
+    'Tells what fraction latest evaluation scores are averaged. This is used'
+    ' to reduce variance.')
 
 dense = functools.partial(
     tf.keras.layers.Dense,
@@ -680,6 +684,10 @@ def train_eval(
         if isinstance(metric, py_metrics.AverageReturnMetric):
           average_returns.append(metric._buffer.mean())
 
+  # Log last section of evaluation scores for the final metric.
+  idx = int(FLAGS.average_last_fraction * len(average_returns))
+  logging.info('Step %d, Average Return: %f', env_step_metric.result(),
+               np.mean(average_returns[-idx:]))
   rb_observer.close()
   reverb_server.stop()
 

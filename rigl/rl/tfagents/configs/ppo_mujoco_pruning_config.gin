@@ -4,7 +4,6 @@ train_eval.sparse_output_layer = True
 train_eval.train_mode_actor = 'sparse'
 train_eval.train_mode_value = 'sparse'
 
-init_masks.fixed_sparse_init = False
 # This must be set to 0 when pruning to avoid
 # initializing the masks
 init_masks.sparsity = 0.0

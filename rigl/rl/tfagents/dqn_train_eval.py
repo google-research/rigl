@@ -65,11 +65,13 @@ flags.DEFINE_multi_string(
     '(e.g. "train_eval.env_name=Acrobot-v1",'
     '      "init_masks.sparsity=0.9").')
 
+# BEGIN_GOOGLE_INTERNAL
 # Env params
 flags.DEFINE_bool('is_atari', False, 'Whether the env is an atari game.')
 flags.DEFINE_bool('is_mujoco', False, 'Whether the env is a mujoco game.')
 flags.DEFINE_bool('is_classic', False,
                   'Whether the env is a classic control game.')
+# END_GOOGLE_INTERNAL
 
 
 @gin.configurable
@@ -195,6 +197,7 @@ def build_network(
   return sequential.Sequential(all_layers)
 
 
+# BEGIN_GOOGLE_INTERNAL
 def build_atari_network(num_actions,
                         is_sparse,
                         width = 1.0,
@@ -247,6 +250,7 @@ def build_atari_network(num_actions,
       wrapped_layers.append(layer)
       logging.info('Did not wrap layer %s.', layer)
   return sequential.Sequential(wrapped_layers)
+# END_GOOGLE_INTERNAL
 
 
 @gin.configurable
@@ -277,11 +281,13 @@ def train_eval(
     eval_episodes=10,
     weight_decay = 0.0,
     width = 1.0,
+    # BEGIN_GOOGLE_INTERNAL
     # Atari specific
     max_episode_frames_collect=50000,  # env frames observed by the agent
     max_episode_frames_eval=108000,  # env frames observed by the agent
     mode='NoFrameskip',
     version='v4',
+    # END_GOOGLE_INTERNAL
     debug_summaries=False,
     sparse_output_layer=True,
     train_mode='dense'):
@@ -301,6 +307,9 @@ def train_eval(
   logging.info('DQN params: Num iterations: %s', num_iterations)
   logging.info('DQN params: Sparse output layer: %s', sparse_output_layer)
 
+  collect_env = suite_gym.load(env_name)
+  eval_env = suite_gym.load(env_name)
+  # BEGIN_GOOGLE_INTERNAL
   if FLAGS.is_atari:
     atari_env_name = suite_atari.game(
         name=env_name,
@@ -315,10 +324,7 @@ def train_eval(
         environment_name=atari_env_name,
         max_episode_steps=max_episode_frames_eval,
         gym_env_wrappers=suite_atari.DEFAULT_ATARI_GYM_WRAPPERS_WITH_STACKING)
-  else:
-    collect_env = suite_gym.load(env_name)
-    eval_env = suite_gym.load(env_name)
-
+  # END_GOOGLE_INTERNAL
   logging.info('Collect env: %s', collect_env)
   logging.info('Eval env: %s', eval_env)
 
@@ -328,18 +334,11 @@ def train_eval(
   num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
   observation_shape = collect_env.observation_spec().shape
   # Build network and get pruning params
-  if FLAGS.is_atari:
-    q_net = build_atari_network(
-        num_actions=num_actions,
-        is_sparse=(train_mode == 'sparse'),
-        width=width,
-        weight_decay=weight_decay,
-        sparse_output_layer=sparse_output_layer)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    loss = common.element_wise_huber_loss
-    decay_fn = tf.compat.v1.train.polynomial_decay(
-        1.0, train_step, epsilon_decay_period, end_learning_rate=epsilon_greedy)
-  else:
+  is_atari = False
+  # BEGIN_GOOGLE_INTERNAL
+  is_atari = FLAGS.is_atari
+  # END_GOOGLE_INTERNAL
+  if not is_atari:
     q_net = build_network(
         fc_layer_params=fc_layer_params,
         num_actions=num_actions,
@@ -353,6 +352,20 @@ def train_eval(
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     loss = common.element_wise_squared_loss
     decay_fn = epsilon_greedy
+  # BEGIN_GOOGLE_INTERNAL
+  else:
+    q_net = build_atari_network(
+        num_actions=num_actions,
+        is_sparse=(train_mode == 'sparse'),
+        width=width,
+        weight_decay=weight_decay,
+        sparse_output_layer=sparse_output_layer)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    loss = common.element_wise_huber_loss
+    decay_fn = tf.compat.v1.train.polynomial_decay(
+        1.0, train_step, epsilon_decay_period, end_learning_rate=epsilon_greedy)
+  # END_GOOGLE_INTERNAL
+
   agent = SparseDqnAgent(
       time_step_tensor_spec,
       action_tensor_spec,

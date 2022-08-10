@@ -73,7 +73,7 @@ def wrap_all_layers(layers,
     logging.info('Pruning schedule: frequency: %f', frequency)
 
     # Create dummy masks to get layer-wise sparsities. This is because the
-    # get_sparsities function expects mask variables to calculate th
+    # get_sparsities function expects mask variables to calculate the
     # sparsities.
     dummy_masks_dict = {}
     layer_input_dim = input_dim

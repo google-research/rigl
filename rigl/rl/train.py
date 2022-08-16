@@ -14,7 +14,6 @@
 # limitations under the License.
 
 r"""The entry point for training a sparse DQN agent."""
-
 from absl import app
 from absl import flags
 
@@ -33,6 +32,7 @@ flags.DEFINE_multi_string(
     '      "create_atari_environment.game_name="Pong"").')
 
 FLAGS = flags.FLAGS
+
 
 def create_sparsetrain_runner(base_dir):
   assert base_dir is not None

@@ -491,6 +491,14 @@ def train_eval(
     actor_critic_widths_str = ''):
   """Trains and evaluates SAC."""
   assert FLAGS.is_mujoco
+  # BEGIN_GOOGLE_INTERNAL
+  xm_client = xmanager_api.XManagerApi()
+  work_unit = xm_client.get_current_work_unit()
+  xm_objective_value_train_reward = work_unit.get_measurement_series(
+      label='train_reward')
+  xm_objective_value_reward = work_unit.get_measurement_series(label='reward')
+  # END_GOOGLE_INTERNAL
+
   if actor_critic_widths_str:
     actor_critic_widths = [float(s) for s in actor_critic_widths_str.split('_')]
     width_actor = actor_critic_widths[0]
@@ -686,8 +694,10 @@ def train_eval(
 
   # Log last section of evaluation scores for the final metric.
   idx = int(FLAGS.average_last_fraction * len(average_returns))
+  avg_return = np.mean(average_returns[-idx:])
   logging.info('Step %d, Average Return: %f', env_step_metric.result(),
-               np.mean(average_returns[-idx:]))
+               avg_return)
+
   rb_observer.close()
   reverb_server.stop()
 

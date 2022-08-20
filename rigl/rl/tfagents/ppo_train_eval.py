@@ -61,7 +61,6 @@ from tf_agents.utils import eager_utils
 from tf_agents.utils import nest_utils
 from tf_agents.utils import object_identity
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('root_dir', os.getenv('TEST_UNDECLARED_OUTPUTS_DIR'),
@@ -909,6 +908,13 @@ def train_eval(
     weight_decay=0.0,
     width=1.0):
   """Trains and evaluates DQN."""
+  # BEGIN_GOOGLE_INTERNAL
+  xm_client = xmanager_api.XManagerApi()
+  work_unit = xm_client.get_current_work_unit()
+  xm_objective_value_train_reward = work_unit.get_measurement_series(
+      label='train_reward')
+  xm_objective_value_reward = work_unit.get_measurement_series(label='reward')
+  # END_GOOGLE_INTERNAL
 
   logging.info('Actor fc layer params: %s', actor_fc_layers)
   logging.info('Value fc layer params: %s', value_fc_layers)
@@ -1162,10 +1168,13 @@ def train_eval(
       for metric in eval_actor.metrics:
         if isinstance(metric, py_metrics.AverageReturnMetric):
           average_returns.append(metric._buffer.mean())
+
   # Log last section of evaluation scores for the final metric.
   idx = int(FLAGS.average_last_fraction * len(average_returns))
+  avg_return = np.mean(average_returns[-idx:])
   logging.info('Step %d, Average Return: %f', collect_env_step_metric.result(),
-               np.mean(average_returns[-idx:]))
+               avg_return)
+
   rb_observer.close()
   reverb_server.stop()
 

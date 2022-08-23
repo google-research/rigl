@@ -122,6 +122,7 @@ class ImpalaNetwork(tf.keras.Model):
                width=1.0,
                mode='dense',
                name='impala_deep_network',
+               prune_allow_key='',
                use_batch_norm=False):
     super().__init__(name=name)
     self._width = width
@@ -172,6 +173,10 @@ class ImpalaNetwork(tf.keras.Model):
         else:
           c_module = self
         if mode == 'prune':
+          if prune_allow_key and (prune_allow_key not in l_name):
+            sparsity = 0
+            logging.info('%s not pruned since, prune_allow_key: %s', l_name,
+                         prune_allow_key)
           wrapped_layer = sparse_utils.maybe_prune_layer(
               getattr(c_module, l_name),
               params=sparse_utils.get_pruning_params(

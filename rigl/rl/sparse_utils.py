@@ -224,8 +224,8 @@ class SparseOptTf2Mixin:
 
 
 @gin.configurable()
-class SparseSETOptimizer(SparseOptTf2Mixin,
-                         sparse_opt_base.SparseSETOptimizerBase):
+class UpdatedSETOptimizer(SparseOptTf2Mixin,
+                          sparse_opt_base.SparseSETOptimizerBase):
 
   def _before_apply_gradients(self, grads_and_vars):
     return tf1.no_op()

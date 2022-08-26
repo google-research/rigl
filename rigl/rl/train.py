@@ -14,11 +14,16 @@
 # limitations under the License.
 
 r"""The entry point for training a sparse DQN agent."""
+
+import os
+
 from absl import app
 from absl import flags
-
 from dopamine.discrete_domains import run_experiment as base_run_experiment
+import gin
 from rigl.rl import run_experiment
+import tensorflow as tf
+
 
 
 flags.DEFINE_string('base_dir', None,
@@ -41,6 +46,9 @@ def create_sparsetrain_runner(base_dir):
 
 def main(unused_argv):
   base_run_experiment.load_gin_configs(FLAGS.gin_files, FLAGS.gin_bindings)
+  logconfigfile_path = os.path.join(FLAGS.base_dir, 'operative_config.gin')
+  with tf.io.gfile.GFile(logconfigfile_path, 'w') as f:
+    f.write('# Gin-Config:\n %s' % gin.config.operative_config_str())
   runner = create_sparsetrain_runner(FLAGS.base_dir)
   runner.run_experiment()
 

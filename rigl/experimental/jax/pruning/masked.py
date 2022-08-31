@@ -212,13 +212,13 @@ def mask_map(model,
 
   # First set all non-masked params to None in copy of model pytree.
   filter_non_masked = _filter_param(WEIGHT_PARAM_NAMES, invert=True)
-  nonmasked_traversal = flax.optim.ModelParamTraversal(filter_non_masked)
+  nonmasked_traversal = flax.optim.ModelParamTraversal(filter_non_masked)  # pytype: disable=module-attr
   mask_model = nonmasked_traversal.update(lambda _: None, model)
 
   # Then find params to mask, and set to array.
   for param_name in WEIGHT_PARAM_NAMES:
     filter_masked = _filter_param(WEIGHT_PARAM_NAMES)
-    mask_traversal = flax.optim.ModelParamTraversal(filter_masked)
+    mask_traversal = flax.optim.ModelParamTraversal(filter_masked)  # pytype: disable=module-attr
     mask_model = mask_traversal.update(
         functools.partial(fn, param_name), mask_model)
 

@@ -109,7 +109,7 @@ def count_param(model,
     The total number of parameters of the given names in the model.
   """
 
-  param_traversal = flax.optim.ModelParamTraversal(
+  param_traversal = flax.optim.ModelParamTraversal(  # pytype: disable=module-attr
       lambda path, _: any(param_name in path for param_name in param_names))
 
   return functools.reduce(

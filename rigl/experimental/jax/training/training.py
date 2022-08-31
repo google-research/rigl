@@ -59,10 +59,10 @@ def _shard_batch(xs):
 
 
 def train_step(
-    optimizer: flax.optim.Optimizer, batch: Mapping[str, jnp.array],
+    optimizer: flax.optim.Optimizer, batch: Mapping[str, jnp.array],  # pytype: disable=module-attr
     rng: Callable[[int], jnp.array], state: flax.deprecated.nn.Collection,
     learning_rate_fn: Callable[[int], float]
-) -> Tuple[flax.optim.Optimizer, flax.deprecated.nn.Collection, float, float]:
+) -> Tuple[flax.optim.Optimizer, flax.deprecated.nn.Collection, float, float]:  # pytype: disable=module-attr
   """Performs training for one minibatch.
 
   Args:
@@ -117,7 +117,7 @@ class Trainer:
 
   def __init__(
       self,
-      optimizer_def: flax.optim.OptimizerDef,
+      optimizer_def: flax.optim.OptimizerDef,  # pytype: disable=module-attr
       initial_model: flax.deprecated.nn.Model,
       initial_state: flax.deprecated.nn.Collection,
       dataset: jnp.array,

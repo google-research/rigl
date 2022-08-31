@@ -68,7 +68,7 @@ class TrainingTest(absltest.TestCase):
         self._rng, (self._input_shape,),
         num_classes=self._num_classes)
 
-    self._optimizer = flax.optim.Momentum(
+    self._optimizer = flax.optim.Momentum(  # pytype: disable=module-attr
         learning_rate=self._learning_rate_fn(0),
         beta=self._momentum,
         weight_decay=self._weight_decay)

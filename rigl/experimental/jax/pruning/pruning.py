@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """Functions for pruning FLAX masked models."""
-import collections
+from collections import abc
 from typing import Any, Callable, Mapping, Optional, Union
 
 import flax
@@ -54,7 +54,7 @@ def prune(
   if not mask:
     mask = masked.simple_mask(model, jnp.ones, masked.WEIGHT_PARAM_NAMES)
 
-  if not isinstance(pruning_rate, collections.Mapping):
+  if not isinstance(pruning_rate, abc.Mapping):
     pruning_rate_dict = {}
     for param_name, _ in masked.iterate_mask(mask):
       # Get the layer name from the parameter's full name/path.

@@ -34,7 +34,7 @@ prune --xm_runlocal --dataset=MNIST --model=MNIST_FC --epochs=10
 --pruning_schedule="{'1': [(2, 0.3), (5, 0.6), (8, 0.95)]}"
 """
 import ast
-import collections
+from collections import abc
 import functools
 from os import path
 from typing import List
@@ -118,7 +118,7 @@ from rigl.experimental.jax.utils import utils
       steps_per_epoch)
   if FLAGS.pruning_schedule:
     pruning_schedule = ast.literal_eval(FLAGS.pruning_schedule)
-    if isinstance(pruning_schedule, collections.Mapping):
+    if isinstance(pruning_schedule, abc.Mapping):
       pruning_rate_fn = {
           f'MaskedModule_{layer_num}': pruning_fn_p(schedule)
           for layer_num, schedule in pruning_schedule.items()

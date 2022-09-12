@@ -22,7 +22,7 @@ Attributes:
   DATAKEY: The key used to retrieve an input image from the batch dictionary.
   PruningRateFnType: Typing alias for a valid pruning rate function.
 """
-import collections
+from collections import abc
 import functools
 import time
 from typing import Callable, Dict, Mapping, Optional, Tuple, Union
@@ -236,7 +236,7 @@ class Trainer:
         epoch_start_time = time.time()
 
       # If we get different schedules for different layers.
-      if isinstance(pruning_rate_fn, collections.Mapping):
+      if isinstance(pruning_rate_fn, abc.Mapping):
         next_pruning_rate = {
             layer: layer_fn(epoch)
             for layer, layer_fn in pruning_rate_fn.items()

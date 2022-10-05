@@ -69,13 +69,6 @@ flags.DEFINE_float(
     'Tells what fraction latest evaluation scores are averaged. This is used'
     ' to reduce variance.')
 
-# BEGIN GOOGLE_INTERNAL
-# Env params
-flags.DEFINE_bool('is_atari', False, 'Whether the env is an atari game.')
-flags.DEFINE_bool('is_mujoco', False, 'Whether the env is a mujoco game.')
-flags.DEFINE_bool('is_classic', False,
-                  'Whether the env is a classic control game.')
-# END GOOGLE_INTERNAL
 
 
 @gin.configurable
@@ -201,60 +194,6 @@ def build_network(
   return sequential.Sequential(all_layers)
 
 
-# BEGIN GOOGLE_INTERNAL
-def build_atari_network(num_actions,
-                        is_sparse,
-                        width = 1.0,
-                        weight_decay = 0.0,
-                        sparse_output_layer = True):
-  """Create a Q network following the architecture from Minh 15."""
-
-  kernel_initializer = tf.keras.initializers.VarianceScaling(
-      scale=2.0, mode='fan_in', distribution='truncated_normal')
-  common_args = {
-      'activation': tf.keras.activations.relu,
-      'kernel_initializer': kernel_initializer,
-      'kernel_regularizer': tf.keras.regularizers.L2(weight_decay)
-  }
-  conv2d = functools.partial(tf.keras.layers.Conv2D, **common_args)
-  dense = functools.partial(tf.keras.layers.Dense, **common_args)
-  common_args['activation'] = None
-  logits = functools.partial(tf.keras.layers.Dense, **common_args)
-
-  # We divide the grayscale pixel values by 255 here rather than storing
-  # normalized values because uint8s are 4x cheaper to store than float32s.
-  layers = [
-      tf.keras.layers.Lambda(lambda x: x / 255),
-      conv2d(_scale_width(num_units=32, width=width), (8, 8), 4),
-      conv2d(_scale_width(num_units=64, width=width), (4, 4), 2),
-      conv2d(_scale_width(num_units=64, width=width), (3, 3), 1),
-      tf.keras.layers.Flatten(),
-      dense(_scale_width(num_units=512, width=width)),
-      logits(num_actions)
-  ]
-
-  # Optionally wrap the layers.
-  def to_wrap(x):
-    return (isinstance(x, tf.keras.layers.Conv2D) or
-            isinstance(x, tf.keras.layers.Dense))
-
-  wrapped_layers = []
-  for i, layer in enumerate(layers):
-    if i == len(layers) - 1:
-      if is_sparse and to_wrap(layer) and sparse_output_layer:
-        wrapped_layers.append(tf_sparse_utils.wrap_layer(layer))
-        logging.info('Wrapped last layer %s.', layer)
-      else:
-        wrapped_layers.append(layer)
-        logging.info('Did not wrap last layer %s.', layer)
-    elif is_sparse and to_wrap(layer):
-      wrapped_layers.append(tf_sparse_utils.wrap_layer(layer))
-      logging.info('Wrapped layer %s.', layer)
-    else:
-      wrapped_layers.append(layer)
-      logging.info('Did not wrap layer %s.', layer)
-  return sequential.Sequential(wrapped_layers)
-# END GOOGLE_INTERNAL
 
 
 @gin.configurable
@@ -285,24 +224,10 @@ def train_eval(
     eval_episodes=10,
     weight_decay = 0.0,
     width = 1.0,
-    # BEGIN GOOGLE_INTERNAL
-    # Atari specific
-    max_episode_frames_collect=50000,  # env frames observed by the agent
-    max_episode_frames_eval=108000,  # env frames observed by the agent
-    mode='NoFrameskip',
-    version='v4',
-    # END GOOGLE_INTERNAL
     debug_summaries=False,
     sparse_output_layer=True,
     train_mode='dense'):
   """Trains and evaluates DQN."""
-  # BEGIN GOOGLE_INTERNAL
-  xm_client = xmanager_api.XManagerApi()
-  work_unit = xm_client.get_current_work_unit()
-  xm_objective_value_train_reward = work_unit.get_measurement_series(
-      label='train_reward')
-  xm_objective_value_reward = work_unit.get_measurement_series(label='reward')
-  # END GOOGLE_INTERNAL
 
   logging.info('DQN params: Fc layer params: %s', fc_layer_params)
   logging.info('DQN params: Train mode: %s', train_mode)
@@ -320,22 +245,6 @@ def train_eval(
 
   collect_env = suite_gym.load(env_name)
   eval_env = suite_gym.load(env_name)
-  # BEGIN GOOGLE_INTERNAL
-  if FLAGS.is_atari:
-    atari_env_name = suite_atari.game(
-        name=env_name,
-        mode=mode,
-        version=version)
-    logging.info('Atari env full name: %s', atari_env_name)
-    collect_env = suite_atari.load(
-        environment_name=atari_env_name,
-        max_episode_steps=max_episode_frames_collect,
-        gym_env_wrappers=suite_atari.DEFAULT_ATARI_GYM_WRAPPERS_WITH_STACKING)
-    eval_env = suite_atari.load(
-        environment_name=atari_env_name,
-        max_episode_steps=max_episode_frames_eval,
-        gym_env_wrappers=suite_atari.DEFAULT_ATARI_GYM_WRAPPERS_WITH_STACKING)
-  # END GOOGLE_INTERNAL
   logging.info('Collect env: %s', collect_env)
   logging.info('Eval env: %s', eval_env)
 
@@ -346,9 +255,6 @@ def train_eval(
   observation_shape = collect_env.observation_spec().shape
   # Build network and get pruning params
   is_atari = False
-  # BEGIN GOOGLE_INTERNAL
-  is_atari = FLAGS.is_atari
-  # END GOOGLE_INTERNAL
   if not is_atari:
     q_net = build_network(
         fc_layer_params=fc_layer_params,
@@ -363,19 +269,6 @@ def train_eval(
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     loss = common.element_wise_squared_loss
     decay_fn = epsilon_greedy
-  # BEGIN GOOGLE_INTERNAL
-  else:
-    q_net = build_atari_network(
-        num_actions=num_actions,
-        is_sparse=(train_mode == 'sparse'),
-        width=width,
-        weight_decay=weight_decay,
-        sparse_output_layer=sparse_output_layer)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    loss = common.element_wise_huber_loss
-    decay_fn = tf.compat.v1.train.polynomial_decay(
-        1.0, train_step, epsilon_decay_period, end_learning_rate=epsilon_greedy)
-  # END GOOGLE_INTERNAL
 
   agent = SparseDqnAgent(
       time_step_tensor_spec,

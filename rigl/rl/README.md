@@ -1,10 +1,9 @@
-Code accompanying the ICML 2022 paper:
-"The State of Sparse Training in Deep Reinforcement Learning".
+# The State of Sparse Training in Deep Reinforcement Learning
+**Paper**: [goo.gle/sparserl-paper](https://goo.gle/sparserl-paper)
+**Video**: [goo.gle/sparserl-video](https://goo.gle/sparserl-video)
 
 This code requires Tensorflow 2.0; therefore we need to use a separate
-requirenments file. Please follow the instructions below:
-
-**Paper**: [goo.gle/sparserl-paper](https://goo.gle/sparserl-paper)
+requirements file. Please follow the instructions below:
 
 First clone this repo.
 ```bash

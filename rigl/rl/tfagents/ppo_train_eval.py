@@ -908,13 +908,13 @@ def train_eval(
     weight_decay=0.0,
     width=1.0):
   """Trains and evaluates DQN."""
-  # BEGIN_GOOGLE_INTERNAL
+  # BEGIN GOOGLE_INTERNAL
   xm_client = xmanager_api.XManagerApi()
   work_unit = xm_client.get_current_work_unit()
   xm_objective_value_train_reward = work_unit.get_measurement_series(
       label='train_reward')
   xm_objective_value_reward = work_unit.get_measurement_series(label='reward')
-  # END_GOOGLE_INTERNAL
+  # END GOOGLE_INTERNAL
 
   logging.info('Actor fc layer params: %s', actor_fc_layers)
   logging.info('Value fc layer params: %s', value_fc_layers)

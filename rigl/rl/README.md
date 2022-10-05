@@ -1,6 +1,6 @@
 # The State of Sparse Training in Deep Reinforcement Learning
-**Paper**: [goo.gle/sparserl-paper](https://goo.gle/sparserl-paper)
-**Video**: [goo.gle/sparserl-video](https://goo.gle/sparserl-video)
+[**Paper**] [goo.gle/sparserl-paper](https://goo.gle/sparserl-paper)
+[**Video**] [goo.gle/sparserl-video](https://goo.gle/sparserl-video)
 
 This code requires Tensorflow 2.0; therefore we need to use a separate
 requirements file. Please follow the instructions below:

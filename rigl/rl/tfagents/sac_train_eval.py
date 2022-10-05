@@ -491,13 +491,13 @@ def train_eval(
     actor_critic_widths_str = ''):
   """Trains and evaluates SAC."""
   assert FLAGS.is_mujoco
-  # BEGIN_GOOGLE_INTERNAL
+  # BEGIN GOOGLE_INTERNAL
   xm_client = xmanager_api.XManagerApi()
   work_unit = xm_client.get_current_work_unit()
   xm_objective_value_train_reward = work_unit.get_measurement_series(
       label='train_reward')
   xm_objective_value_reward = work_unit.get_measurement_series(label='reward')
-  # END_GOOGLE_INTERNAL
+  # END GOOGLE_INTERNAL
 
   if actor_critic_widths_str:
     actor_critic_widths = [float(s) for s in actor_critic_widths_str.split('_')]

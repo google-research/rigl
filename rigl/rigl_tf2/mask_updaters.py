@@ -262,7 +262,7 @@ class UpdateSchedule(object):
     self._mask_updater = mask_updater
     self.update_freq = update_freq
     self.last_update_step = last_update_step
-    self.init_drop_fraction = init_drop_fraction
+    self.init_drop_fraction = tf.convert_to_tensor(init_drop_fraction)
     self.last_drop_fraction = 0
 
   def get_drop_fraction(self, step):

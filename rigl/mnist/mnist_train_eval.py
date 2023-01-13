@@ -412,7 +412,7 @@ def main(unused_args):
               i % FLAGS.mask_record_frequency == 0):
             mask_vals = sess.run(pruning.get_masks())
             # Cast into bool to save space.
-            mask_records[i] = [a.astype(np.bool) for a in mask_vals]
+            mask_records[i] = [a.astype(bool) for a in mask_vals]
           sess.run([train_op])
           weight_sparsity, global_sparsity_val = sess.run(
               [weight_sparsity_levels, global_sparsity])

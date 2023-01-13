@@ -49,7 +49,7 @@ class CIFAR10DatasetTest(absltest.TestCase):
       self.assertTupleEqual(image.shape, (self._batch_size, 32, 32, 3))
 
     with self.subTest(name='DataType'):
-      self.assertTrue(np.issubdtype(image.dtype, np.float))
+      self.assertTrue(np.issubdtype(image.dtype, float))
 
     with self.subTest(name='DataValues'):
       # Normalized by stddev., expect nothing to fall outside 3 stddev.
@@ -59,7 +59,7 @@ class CIFAR10DatasetTest(absltest.TestCase):
       self.assertLen(label, self._batch_size)
 
     with self.subTest(name='LabelType'):
-      self.assertTrue(np.issubdtype(label.dtype, np.int))
+      self.assertTrue(np.issubdtype(label.dtype, int))
 
     with self.subTest(name='LabelValues'):
       self.assertTrue((label >= 0).all() and
@@ -75,7 +75,7 @@ class CIFAR10DatasetTest(absltest.TestCase):
       self.assertTupleEqual(image.shape, (self._batch_size_test, 32, 32, 3))
 
     with self.subTest(name='DataType'):
-      self.assertTrue(np.issubdtype(image.dtype, np.float))
+      self.assertTrue(np.issubdtype(image.dtype, float))
 
     with self.subTest(name='DataValues'):
       # Normalized by stddev., expect nothing to fall outside 3 stddev.
@@ -85,7 +85,7 @@ class CIFAR10DatasetTest(absltest.TestCase):
       self.assertLen(label, self._batch_size_test)
 
     with self.subTest(name='LabelType'):
-      self.assertTrue(np.issubdtype(label.dtype, np.int))
+      self.assertTrue(np.issubdtype(label.dtype, int))
 
     with self.subTest(name='LabelValues'):
       self.assertTrue((label >= 0).all() and

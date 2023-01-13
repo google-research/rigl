@@ -52,13 +52,13 @@ class MNISTDatasetTest(absltest.TestCase):
       self.assertTrue((image >= -1.).all() and (image <= 1.).all())
 
     with self.subTest(name='data_type'):
-      self.assertTrue(np.issubdtype(image.dtype, np.float))
+      self.assertTrue(np.issubdtype(image.dtype, float))
 
     with self.subTest(name='label_shape'):
       self.assertLen(label, self._batch_size)
 
     with self.subTest(name='label_type'):
-      self.assertTrue(np.issubdtype(label.dtype, np.int))
+      self.assertTrue(np.issubdtype(label.dtype, int))
 
     with self.subTest(name='label_values'):
       self.assertTrue((label >= 0).all() and
@@ -74,7 +74,7 @@ class MNISTDatasetTest(absltest.TestCase):
       self.assertTupleEqual(image.shape, (self._batch_size_test, 28, 28, 1))
 
     with self.subTest(name='data_type'):
-      self.assertTrue(np.issubdtype(image.dtype, np.float))
+      self.assertTrue(np.issubdtype(image.dtype, float))
 
     # TODO: Find a better approach to testing with JAX arrays.
     with self.subTest(name='data_values'):
@@ -84,7 +84,7 @@ class MNISTDatasetTest(absltest.TestCase):
       self.assertLen(label, self._batch_size_test)
 
     with self.subTest(name='label_type'):
-      self.assertTrue(np.issubdtype(label.dtype, np.int))
+      self.assertTrue(np.issubdtype(label.dtype, int))
 
     with self.subTest(name='label_values'):
       self.assertTrue((label >= 0).all() and
